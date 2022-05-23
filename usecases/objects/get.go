@@ -28,7 +28,11 @@ import (
 // GetObject Class from the connected DB
 func (m *Manager) GetObject(ctx context.Context, principal *models.Principal, class string,
 	id strfmt.UUID, additional additional.Properties) (*models.Object, error) {
-	err := m.authorizer.Authorize(principal, "get", fmt.Sprintf("objects/%s", id.String()))
+	path := fmt.Sprintf("objects/%s", id)
+	if class != "" {
+		path = fmt.Sprintf("objects/%s/%s", class, id)
+	}
+	err := m.authorizer.Authorize(principal, "get", path)
 	if err != nil {
 		return nil, err
 	}
