@@ -72,7 +72,7 @@ func Test_GetAction(t *testing.T) {
 
 		vectorRepo.On("ObjectByID", id, mock.Anything, mock.Anything).Return((*search.Result)(nil), nil).Once()
 
-		_, err := manager.GetObject(context.Background(), &models.Principal{}, id, additional.Properties{})
+		_, err := manager.GetObject(context.Background(), &models.Principal{}, "", id, additional.Properties{})
 		assert.Equal(t, NewErrNotFound("no object with id '99ee9968-22ec-416a-9032-cff80f2f7fdf'"), err)
 	})
 
@@ -94,7 +94,7 @@ func Test_GetAction(t *testing.T) {
 			VectorWeights: (map[string]string)(nil),
 		}
 
-		res, err := manager.GetObject(context.Background(), &models.Principal{}, id, additional.Properties{})
+		res, err := manager.GetObject(context.Background(), &models.Principal{}, "", id, additional.Properties{})
 		require.Nil(t, err)
 		assert.Equal(t, expected, res)
 	})
@@ -195,7 +195,7 @@ func Test_GetAction(t *testing.T) {
 					Schema:    map[string]interface{}{"foo": "bar"},
 				}
 				vectorRepo.On("ObjectByID", id, mock.Anything, mock.Anything).Return(result, nil).Once()
-				_, err := manager.GetObject(context.Background(), &models.Principal{}, id,
+				_, err := manager.GetObject(context.Background(), &models.Principal{}, "", id,
 					additional.Properties{
 						ModuleParams: map[string]interface{}{
 							"featureProjection": getDefaultParam("featureProjection"),
@@ -214,7 +214,7 @@ func Test_GetAction(t *testing.T) {
 					Schema:    map[string]interface{}{"foo": "bar"},
 				}
 				vectorRepo.On("ObjectByID", id, mock.Anything, mock.Anything).Return(result, nil).Once()
-				_, err := manager.GetObject(context.Background(), &models.Principal{}, id,
+				_, err := manager.GetObject(context.Background(), &models.Principal{}, "", id,
 					additional.Properties{
 						ModuleParams: map[string]interface{}{
 							"semanticPath": getDefaultParam("semanticPath"),
@@ -268,7 +268,7 @@ func Test_GetAction(t *testing.T) {
 					},
 				}
 
-				res, err := manager.GetObject(context.Background(), &models.Principal{}, id,
+				res, err := manager.GetObject(context.Background(), &models.Principal{}, "", id,
 					additional.Properties{
 						ModuleParams: map[string]interface{}{
 							"nearestNeighbors": true,
@@ -618,7 +618,7 @@ func Test_GetThing(t *testing.T) {
 
 		vectorRepo.On("ObjectByID", id, mock.Anything, mock.Anything).Return((*search.Result)(nil), nil).Once()
 
-		_, err := manager.GetObject(context.Background(), &models.Principal{}, id, additional.Properties{})
+		_, err := manager.GetObject(context.Background(), &models.Principal{}, "", id, additional.Properties{})
 		assert.Equal(t, NewErrNotFound("no object with id '99ee9968-22ec-416a-9032-cff80f2f7fdf'"), err)
 	})
 
@@ -640,7 +640,7 @@ func Test_GetThing(t *testing.T) {
 			VectorWeights: (map[string]string)(nil),
 		}
 
-		res, err := manager.GetObject(context.Background(), &models.Principal{}, id, additional.Properties{})
+		res, err := manager.GetObject(context.Background(), &models.Principal{}, "", id, additional.Properties{})
 		require.Nil(t, err)
 		assert.Equal(t, expected, res)
 	})
@@ -685,7 +685,7 @@ func Test_GetThing(t *testing.T) {
 					Schema:    map[string]interface{}{"foo": "bar"},
 				}
 				vectorRepo.On("ObjectByID", id, mock.Anything, mock.Anything).Return(result, nil).Once()
-				_, err := manager.GetObject(context.Background(), &models.Principal{}, id,
+				_, err := manager.GetObject(context.Background(), &models.Principal{}, "", id,
 					additional.Properties{
 						ModuleParams: map[string]interface{}{
 							"featureProjection": getDefaultParam("featureProjection"),
@@ -739,7 +739,7 @@ func Test_GetThing(t *testing.T) {
 					},
 				}
 
-				res, err := manager.GetObject(context.Background(), &models.Principal{}, id,
+				res, err := manager.GetObject(context.Background(), &models.Principal{}, "", id,
 					additional.Properties{
 						ModuleParams: map[string]interface{}{
 							"nearestNeighbors": true,
