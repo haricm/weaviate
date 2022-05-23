@@ -45,7 +45,7 @@ type ModulesProvider interface {
 type objectsManager interface {
 	AddObject(context.Context, *models.Principal, *models.Object) (*models.Object, error)
 	ValidateObject(context.Context, *models.Principal, *models.Object) error
-	GetObject(context.Context, *models.Principal, strfmt.UUID, additional.Properties) (*models.Object, error)
+	GetObject(_ context.Context, _ *models.Principal, class string, _ strfmt.UUID, _ additional.Properties) (*models.Object, error)
 	GetObjects(context.Context, *models.Principal, *int64, *int64, *string, *string, additional.Properties) ([]*models.Object, error)
 	UpdateObject(context.Context, *models.Principal, strfmt.UUID, *models.Object) (*models.Object, error)
 	MergeObject(context.Context, *models.Principal, strfmt.UUID, *models.Object) error
@@ -104,6 +104,16 @@ func (h *objectHandlers) validateObject(params objects.ObjectsValidateParams,
 
 func (h *objectHandlers) getObject(params objects.ObjectsGetParams,
 	principal *models.Principal) middleware.Responder {
+	ps := objects.ObjectsClassGetParams{
+		HTTPRequest: params.HTTPRequest,
+		ID:          params.ID,
+		Include:     params.Include,
+	}
+	return h.findOne(ps, principal)
+}
+
+func (h *objectHandlers) findOne(params objects.ObjectsClassGetParams,
+	principal *models.Principal) middleware.Responder {
 	var additional additional.Properties
 
 	// The process to extract additional params depends on knowing the schema
@@ -126,7 +136,7 @@ func (h *objectHandlers) getObject(params objects.ObjectsGetParams,
 		}
 	}
 
-	object, err := h.manager.GetObject(params.HTTPRequest.Context(), principal, params.ID, additional)
+	object, err := h.manager.GetObject(params.HTTPRequest.Context(), principal, params.ClassName, params.ID, additional)
 	if err != nil {
 		switch err.(type) {
 		case errors.Forbidden:
@@ -342,6 +352,8 @@ func setupObjectHandlers(api *operations.WeaviateAPI,
 		ObjectsValidateHandlerFunc(h.validateObject)
 	api.ObjectsObjectsGetHandler = objects.
 		ObjectsGetHandlerFunc(h.getObject)
+	api.ObjectsObjectsClassGetHandler =
+		objects.ObjectsClassGetHandlerFunc(h.findOne)
 	api.ObjectsObjectsDeleteHandler = objects.
 		ObjectsDeleteHandlerFunc(h.deleteObject)
 	api.ObjectsObjectsHeadHandler = objects.

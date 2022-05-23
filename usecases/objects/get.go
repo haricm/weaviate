@@ -26,7 +26,7 @@ import (
 )
 
 // GetObject Class from the connected DB
-func (m *Manager) GetObject(ctx context.Context, principal *models.Principal,
+func (m *Manager) GetObject(ctx context.Context, principal *models.Principal, class string,
 	id strfmt.UUID, additional additional.Properties) (*models.Object, error) {
 	err := m.authorizer.Authorize(principal, "get", fmt.Sprintf("objects/%s", id.String()))
 	if err != nil {
@@ -39,7 +39,7 @@ func (m *Manager) GetObject(ctx context.Context, principal *models.Principal,
 	}
 	defer unlock()
 
-	res, err := m.getObjectFromRepo(ctx, id, additional)
+	res, err := m.getObjectFromRepo(ctx, class, id, additional)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (m *Manager) GetObjectsClass(ctx context.Context, principal *models.Princip
 	}
 	defer unlock()
 
-	res, err := m.getObjectFromRepo(ctx, id, additional.Properties{})
+	res, err := m.getObjectFromRepo(ctx, "", id, additional.Properties{})
 	if err != nil {
 		return nil, err
 	}
@@ -90,9 +90,13 @@ func (m *Manager) GetObjectsClass(ctx context.Context, principal *models.Princip
 	return s.GetClass(schema.ClassName(res.ClassName)), nil
 }
 
-func (m *Manager) getObjectFromRepo(ctx context.Context, id strfmt.UUID,
-	additional additional.Properties) (*search.Result, error) {
-	res, err := m.vectorRepo.ObjectByID(ctx, id, search.SelectProperties{}, additional)
+func (m *Manager) getObjectFromRepo(ctx context.Context, class string, id strfmt.UUID,
+	additional additional.Properties) (res *search.Result, err error) {
+	if class != "" {
+		res, err = m.vectorRepo.Object(ctx, class, id, search.SelectProperties{}, additional)
+	} else {
+		res, err = m.vectorRepo.ObjectByID(ctx, id, search.SelectProperties{}, additional)
+	}
 	if err != nil {
 		return nil, NewErrInternal("repo: object by id: %v", err)
 	}

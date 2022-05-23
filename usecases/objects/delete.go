@@ -43,7 +43,7 @@ func (m *Manager) deleteObjectFromRepo(ctx context.Context, id strfmt.UUID) erro
 	// https://github.com/semi-technologies/weaviate/issues/1836
 	deleteCounter := 0
 	for {
-		objectRes, err := m.getObjectFromRepo(ctx, id, additional.Properties{})
+		objectRes, err := m.getObjectFromRepo(ctx, "", id, additional.Properties{})
 		if err != nil {
 			_, ok := err.(ErrNotFound)
 			if ok {
