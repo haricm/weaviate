@@ -751,7 +751,7 @@ func init() {
         ]
       }
     },
-    "/objects/{className}{id}": {
+    "/objects/{className}/{id}": {
       "get": {
         "description": "Lists Objects.",
         "tags": [
@@ -3821,7 +3821,7 @@ func init() {
         ]
       }
     },
-    "/objects/{className}{id}": {
+    "/objects/{className}/{id}": {
       "get": {
         "description": "Lists Objects.",
         "tags": [

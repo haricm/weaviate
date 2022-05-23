@@ -1770,7 +1770,7 @@
         "x-available-in-websocket": true
       }
     },
-    "/objects/{className}{id}": {
+    "/objects/{className}/{id}": {
       "get": {
         "description": "Lists Objects.",
         "operationId": "objects.class.get",

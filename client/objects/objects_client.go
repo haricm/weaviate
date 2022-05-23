@@ -79,7 +79,7 @@ func (a *Client) ObjectsClassGet(params *ObjectsClassGetParams, authInfo runtime
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "objects.class.get",
 		Method:             "GET",
-		PathPattern:        "/objects/{className}{id}",
+		PathPattern:        "/objects/{className}/{id}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/yaml"},
 		Schemes:            []string{"https"},

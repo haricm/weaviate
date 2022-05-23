@@ -90,7 +90,7 @@ type ObjectsClassGetOK struct {
 }
 
 func (o *ObjectsClassGetOK) Error() string {
-	return fmt.Sprintf("[GET /objects/{className}{id}][%d] objectsClassGetOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /objects/{className}/{id}][%d] objectsClassGetOK  %+v", 200, o.Payload)
 }
 
 func (o *ObjectsClassGetOK) GetPayload() *models.Object {
@@ -123,7 +123,7 @@ type ObjectsClassGetBadRequest struct {
 }
 
 func (o *ObjectsClassGetBadRequest) Error() string {
-	return fmt.Sprintf("[GET /objects/{className}{id}][%d] objectsClassGetBadRequest  %+v", 400, o.Payload)
+	return fmt.Sprintf("[GET /objects/{className}/{id}][%d] objectsClassGetBadRequest  %+v", 400, o.Payload)
 }
 
 func (o *ObjectsClassGetBadRequest) GetPayload() *models.ErrorResponse {
@@ -155,7 +155,7 @@ type ObjectsClassGetUnauthorized struct {
 }
 
 func (o *ObjectsClassGetUnauthorized) Error() string {
-	return fmt.Sprintf("[GET /objects/{className}{id}][%d] objectsClassGetUnauthorized ", 401)
+	return fmt.Sprintf("[GET /objects/{className}/{id}][%d] objectsClassGetUnauthorized ", 401)
 }
 
 func (o *ObjectsClassGetUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -177,7 +177,7 @@ type ObjectsClassGetForbidden struct {
 }
 
 func (o *ObjectsClassGetForbidden) Error() string {
-	return fmt.Sprintf("[GET /objects/{className}{id}][%d] objectsClassGetForbidden  %+v", 403, o.Payload)
+	return fmt.Sprintf("[GET /objects/{className}/{id}][%d] objectsClassGetForbidden  %+v", 403, o.Payload)
 }
 
 func (o *ObjectsClassGetForbidden) GetPayload() *models.ErrorResponse {
@@ -209,7 +209,7 @@ type ObjectsClassGetNotFound struct {
 }
 
 func (o *ObjectsClassGetNotFound) Error() string {
-	return fmt.Sprintf("[GET /objects/{className}{id}][%d] objectsClassGetNotFound ", 404)
+	return fmt.Sprintf("[GET /objects/{className}/{id}][%d] objectsClassGetNotFound ", 404)
 }
 
 func (o *ObjectsClassGetNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -231,7 +231,7 @@ type ObjectsClassGetInternalServerError struct {
 }
 
 func (o *ObjectsClassGetInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /objects/{className}{id}][%d] objectsClassGetInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[GET /objects/{className}/{id}][%d] objectsClassGetInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *ObjectsClassGetInternalServerError) GetPayload() *models.ErrorResponse {
