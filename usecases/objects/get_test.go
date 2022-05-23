@@ -864,6 +864,131 @@ func Test_GetThing(t *testing.T) {
 	})
 }
 
+func Test_GetObject(t *testing.T) {
+	var (
+		vectorRepo    *fakeVectorRepo
+		manager       *Manager
+		extender      *fakeExtender
+		projectorFake *fakeProjector
+
+		principal = models.Principal{}
+		adds      = additional.Properties{}
+		className = "ThingClass"
+		id        = strfmt.UUID("99ee9968-22ec-416a-9032-cff80f2f7fdf")
+		schema    = schema.Schema{
+			Objects: &models.Schema{
+				Classes: []*models.Class{
+					{
+						Class: className,
+					},
+				},
+			},
+		}
+		result = &search.Result{
+			ID:        id,
+			ClassName: className,
+			Schema:    map[string]interface{}{"foo": "bar"},
+		}
+	)
+
+	reset := func() {
+		vectorRepo = &fakeVectorRepo{}
+		schemaManager := &fakeSchemaManager{
+			GetSchemaResponse: schema,
+		}
+		locks := &fakeLocks{}
+		cfg := &config.WeaviateConfig{}
+		cfg.Config.QueryDefaults.Limit = 20
+		cfg.Config.QueryMaximumResults = 200
+		authorizer := &fakeAuthorizer{}
+		logger, _ := test.NewNullLogger()
+		extender = &fakeExtender{}
+		projectorFake = &fakeProjector{}
+		vectorizer := &fakeVectorizer{}
+		vecProvider := &fakeVectorizerProvider{vectorizer}
+		manager = NewManager(locks, schemaManager, cfg, logger, authorizer,
+			vecProvider, vectorRepo, getFakeModulesProviderWithCustomExtenders(extender, projectorFake))
+	}
+	reset()
+	extender.multi = []search.Result{
+		{
+			ID:        id,
+			ClassName: className,
+			Schema:    map[string]interface{}{"foo": "bar"},
+			AdditionalProperties: models.AdditionalProperties{
+				"nearestNeighbors": &NearestNeighbors{
+					Neighbors: []*NearestNeighbor{
+						{
+							Concept:  "foo",
+							Distance: 0.3,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	t.Run("without projection", func(t *testing.T) {
+		vectorRepo.On("Object", className, id, mock.Anything, mock.Anything).Return((*search.Result)(nil), nil).Once()
+		_, err := manager.GetObject(context.Background(), &principal, className, id, adds)
+		if err == nil {
+			t.Errorf("GetObject() must return an error for non existing object")
+		}
+
+		vectorRepo.On("Object", className, id, mock.Anything, mock.Anything).Return(result, nil).Once()
+		expected := &models.Object{
+			ID:            id,
+			Class:         className,
+			Properties:    map[string]interface{}{"foo": "bar"},
+			VectorWeights: (map[string]string)(nil),
+		}
+
+		got, err := manager.GetObject(context.Background(), &principal, className, id, adds)
+		require.Nil(t, err)
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("with projection", func(t *testing.T) {
+		vectorRepo.On("Object", className, id, mock.Anything, mock.Anything).Return(result, nil).Once()
+		_, err := manager.GetObject(context.Background(), &principal, className, id,
+			additional.Properties{
+				ModuleParams: map[string]interface{}{
+					"Unknown": getDefaultParam("Unknown"),
+				},
+			})
+		if err == nil {
+			t.Errorf("GetObject() must return unknown feature projection error")
+		}
+
+		vectorRepo.On("Object", className, id, mock.Anything, mock.Anything).Return(result, nil).Once()
+		expected := &models.Object{
+			ID:            id,
+			Class:         className,
+			Properties:    map[string]interface{}{"foo": "bar"},
+			VectorWeights: (map[string]string)(nil),
+			Additional: models.AdditionalProperties{
+				"nearestNeighbors": &NearestNeighbors{
+					Neighbors: []*NearestNeighbor{
+						{
+							Concept:  "foo",
+							Distance: 0.3,
+						},
+					},
+				},
+			},
+		}
+
+		res, err := manager.GetObject(context.Background(), &principal, className, id,
+			additional.Properties{
+				ModuleParams: map[string]interface{}{
+					"nearestNeighbors": true,
+				},
+			})
+		require.Nil(t, err)
+		assert.Equal(t, expected, res)
+	})
+}
+
 func ptInt64(in int64) *int64 {
 	return &in
 }
