@@ -751,6 +751,72 @@ func init() {
         ]
       }
     },
+    "/objects/{className}{id}": {
+      "get": {
+        "description": "Lists Objects.",
+        "tags": [
+          "objects"
+        ],
+        "summary": "Get a specific Object based on its UUID and a Object UUID. Also available as Websocket bus.",
+        "operationId": "objects.class.get",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "className",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique ID of the Object.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "$ref": "#/parameters/CommonIncludeParameterQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "schema": {
+              "$ref": "#/definitions/Object"
+            }
+          },
+          "400": {
+            "description": "Malformed request.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized or invalid credentials."
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Successful query result but no resource was found."
+          },
+          "500": {
+            "description": "An error has occurred while trying to fulfill the request. Most likely the ErrorResponse will contain more information about the error.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-available-in-mqtt": false,
+        "x-available-in-websocket": false,
+        "x-serviceIds": [
+          "weaviate.local.query"
+        ]
+      }
+    },
     "/objects/{id}": {
       "get": {
         "description": "Lists Objects.",
@@ -759,6 +825,7 @@ func init() {
         ],
         "summary": "Get a specific Object based on its UUID and a Object UUID. Also available as Websocket bus.",
         "operationId": "objects.get",
+        "deprecated": true,
         "parameters": [
           {
             "type": "string",
@@ -3754,6 +3821,75 @@ func init() {
         ]
       }
     },
+    "/objects/{className}{id}": {
+      "get": {
+        "description": "Lists Objects.",
+        "tags": [
+          "objects"
+        ],
+        "summary": "Get a specific Object based on its UUID and a Object UUID. Also available as Websocket bus.",
+        "operationId": "objects.class.get",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "className",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique ID of the Object.",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Include additional information, such as classification infos. Allowed values include: classification, vector, interpretation",
+            "name": "include",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "schema": {
+              "$ref": "#/definitions/Object"
+            }
+          },
+          "400": {
+            "description": "Malformed request.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized or invalid credentials."
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Successful query result but no resource was found."
+          },
+          "500": {
+            "description": "An error has occurred while trying to fulfill the request. Most likely the ErrorResponse will contain more information about the error.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-available-in-mqtt": false,
+        "x-available-in-websocket": false,
+        "x-serviceIds": [
+          "weaviate.local.query"
+        ]
+      }
+    },
     "/objects/{id}": {
       "get": {
         "description": "Lists Objects.",
@@ -3762,6 +3898,7 @@ func init() {
         ],
         "summary": "Get a specific Object based on its UUID and a Object UUID. Also available as Websocket bus.",
         "operationId": "objects.get",
+        "deprecated": true,
         "parameters": [
           {
             "type": "string",
