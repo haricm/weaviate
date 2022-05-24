@@ -15,6 +15,7 @@ package test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -36,15 +37,26 @@ func creatingObjects(t *testing.T) {
 		var (
 			id        = strfmt.UUID("d47ea61b-0ed7-4e5f-9c05-6d2c0786660f")
 			className = "TestObject"
+			// Set all object values to compare
+			objectTestString = "Test string"
 		)
 		// clean up to make sure we can run this test multiple times in a row
 		defer func() {
 			params := objects.NewObjectsDeleteParams().WithID(id)
 			helper.Client(t).Objects.ObjectsDelete(params, nil)
+			{
+				params := objects.NewObjectsClassGetParams()
+				params.WithClassName(className).WithID(id)
+				_, err := helper.Client(t).Objects.ObjectsClassGet(params, nil)
+				if err == nil {
+					t.Errorf("Object %v cannot exist after deletion", id)
+				}
+				werr := new(objects.ObjectsClassGetNotFound)
+				if ok := errors.As(err, &werr); !ok {
+					t.Errorf("oooo get deleted object err got: %v want: %v", err, werr)
+				}
+			}
 		}()
-
-		// Set all object values to compare
-		objectTestString := "Test string"
 
 		params := objects.NewObjectsCreateParams().WithBody(
 			&models.Object{
