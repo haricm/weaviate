@@ -49,7 +49,7 @@ type objectsManager interface {
 	GetObjects(context.Context, *models.Principal, *int64, *int64, *string, *string, additional.Properties) ([]*models.Object, error)
 	UpdateObject(context.Context, *models.Principal, strfmt.UUID, *models.Object) (*models.Object, error)
 	MergeObject(context.Context, *models.Principal, strfmt.UUID, *models.Object) error
-	DeleteObject(context.Context, *models.Principal, strfmt.UUID) error
+	DeleteObject(_ context.Context, _ *models.Principal, class string, _ strfmt.UUID) error
 	HeadObject(context.Context, *models.Principal, strfmt.UUID) (bool, error)
 	AddObjectReference(context.Context, *models.Principal, strfmt.UUID, string, *models.SingleRef) error
 	UpdateObjectReferences(context.Context, *models.Principal, strfmt.UUID, string, models.MultipleRef) error
@@ -223,7 +223,17 @@ func (h *objectHandlers) updateObject(params objects.ObjectsUpdateParams,
 
 func (h *objectHandlers) deleteObject(params objects.ObjectsDeleteParams,
 	principal *models.Principal) middleware.Responder {
-	err := h.manager.DeleteObject(params.HTTPRequest.Context(), principal, params.ID)
+	ps := objects.ObjectsClassDeleteParams{
+		HTTPRequest: params.HTTPRequest,
+		ID:          params.ID,
+	}
+	return h.deleteOne(ps, principal)
+}
+
+// deleteOne single object
+func (h *objectHandlers) deleteOne(params objects.ObjectsClassDeleteParams,
+	principal *models.Principal) middleware.Responder {
+	err := h.manager.DeleteObject(params.HTTPRequest.Context(), principal, params.ClassName, params.ID)
 	if err != nil {
 		switch err.(type) {
 		case errors.Forbidden:
@@ -351,11 +361,13 @@ func setupObjectHandlers(api *operations.WeaviateAPI,
 	api.ObjectsObjectsValidateHandler = objects.
 		ObjectsValidateHandlerFunc(h.validateObject)
 	api.ObjectsObjectsGetHandler = objects.
-		ObjectsGetHandlerFunc(h.getObject)
+		ObjectsGetHandlerFunc(h.getObject) // deprecated by finOne
 	api.ObjectsObjectsClassGetHandler =
 		objects.ObjectsClassGetHandlerFunc(h.findOne)
 	api.ObjectsObjectsDeleteHandler = objects.
-		ObjectsDeleteHandlerFunc(h.deleteObject)
+		ObjectsDeleteHandlerFunc(h.deleteObject) // deprecated by deleteOne
+	api.ObjectsObjectsClassDeleteHandler = objects.
+		ObjectsClassDeleteHandlerFunc(h.deleteOne)
 	api.ObjectsObjectsHeadHandler = objects.
 		ObjectsHeadHandlerFunc(h.headObject)
 	api.ObjectsObjectsListHandler = objects.

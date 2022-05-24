@@ -21,7 +21,10 @@ import (
 )
 
 // DeleteObject Class Instance from the conncected DB
-func (m *Manager) DeleteObject(ctx context.Context, principal *models.Principal, id strfmt.UUID) error {
+//
+// if class == "" it will delete all object with same id regardless of the class name. 
+// This is due to backward compatibilty reason and should be deprecated in the future
+func (m *Manager) DeleteObject(ctx context.Context, principal *models.Principal, class string, id strfmt.UUID) error {
 	err := m.authorizer.Authorize(principal, "delete", fmt.Sprintf("objects/%s", id.String()))
 	if err != nil {
 		return err
@@ -33,7 +36,14 @@ func (m *Manager) DeleteObject(ctx context.Context, principal *models.Principal,
 	}
 	defer unlock()
 
-	return m.deleteObjectFromRepo(ctx, id)
+	if class == "" { // deprecated
+		return m.deleteObjectFromRepo(ctx, id)
+	}
+	err = m.vectorRepo.DeleteObject(ctx, class, id)
+	if err != nil {
+		return NewErrInternal("could not delete object from vector repo: %v", err)
+	}
+	return nil
 }
 
 func (m *Manager) deleteObjectFromRepo(ctx context.Context, id strfmt.UUID) error {

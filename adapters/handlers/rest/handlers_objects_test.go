@@ -694,7 +694,7 @@ func (f *fakeManager) MergeObject(_ context.Context, _ *models.Principal, _ strf
 	panic("not implemented") // TODO: Implement
 }
 
-func (f *fakeManager) DeleteObject(_ context.Context, _ *models.Principal, _ strfmt.UUID) error {
+func (f *fakeManager) DeleteObject(_ context.Context, _ *models.Principal, class string, _ strfmt.UUID) error {
 	panic("not implemented") // TODO: Implement
 }
 
