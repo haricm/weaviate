@@ -22,10 +22,14 @@ import (
 
 // DeleteObject Class Instance from the conncected DB
 //
-// if class == "" it will delete all object with same id regardless of the class name. 
+// if class == "" it will delete all object with same id regardless of the class name.
 // This is due to backward compatibilty reason and should be deprecated in the future
 func (m *Manager) DeleteObject(ctx context.Context, principal *models.Principal, class string, id strfmt.UUID) error {
-	err := m.authorizer.Authorize(principal, "delete", fmt.Sprintf("objects/%s", id.String()))
+	path := fmt.Sprintf("objects/%s/%s", class, id)
+	if class == "" {
+		path = fmt.Sprintf("objects/%s", id)
+	}
+	err := m.authorizer.Authorize(principal, "delete", path)
 	if err != nil {
 		return err
 	}
@@ -46,6 +50,9 @@ func (m *Manager) DeleteObject(ctx context.Context, principal *models.Principal,
 	return nil
 }
 
+//deleteObjectFromRepo deletes objects with same id and different classes
+//
+// Deprecated 
 func (m *Manager) deleteObjectFromRepo(ctx context.Context, id strfmt.UUID) error {
 	// There might be a situation to have UUIDs which are not unique across classes.
 	// Added loop in order to delete all of the objects with given UUID across all classes.

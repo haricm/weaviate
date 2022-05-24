@@ -53,7 +53,7 @@ func Test_Delete_Action(t *testing.T) {
 	vectorRepo.On("DeleteObject", "MyAction", id).Return(nil).Once()
 
 	ctx := context.Background()
-	err := manager.DeleteObject(ctx, nil, id)
+	err := manager.DeleteObject(ctx, nil, "", id)
 
 	assert.Nil(t, err)
 
@@ -90,7 +90,7 @@ func Test_Delete_Thing(t *testing.T) {
 	vectorRepo.On("DeleteObject", "MyThing", id).Return(nil).Once()
 
 	ctx := context.Background()
-	err := manager.DeleteObject(ctx, nil, id)
+	err := manager.DeleteObject(ctx, nil, "", id)
 
 	assert.Nil(t, err)
 
