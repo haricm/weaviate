@@ -53,7 +53,7 @@ func creatingObjects(t *testing.T) {
 				}
 				werr := new(objects.ObjectsClassGetNotFound)
 				if ok := errors.As(err, &werr); !ok {
-					t.Errorf("oooo get deleted object err got: %v want: %v", err, werr)
+					t.Errorf("get deleted object err got: %v want: %v", err, werr)
 				}
 			}
 		}()
