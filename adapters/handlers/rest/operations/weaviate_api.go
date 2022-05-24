@@ -90,6 +90,9 @@ func NewWeaviateAPI(spec *loads.Document) *WeaviateAPI {
 		MetaMetaGetHandler: meta.MetaGetHandlerFunc(func(params meta.MetaGetParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation meta.MetaGet has not yet been implemented")
 		}),
+		ObjectsObjectsClassDeleteHandler: objects.ObjectsClassDeleteHandlerFunc(func(params objects.ObjectsClassDeleteParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation objects.ObjectsClassDelete has not yet been implemented")
+		}),
 		ObjectsObjectsClassGetHandler: objects.ObjectsClassGetHandlerFunc(func(params objects.ObjectsClassGetParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation objects.ObjectsClassGet has not yet been implemented")
 		}),
@@ -226,6 +229,8 @@ type WeaviateAPI struct {
 	GraphqlGraphqlPostHandler graphql.GraphqlPostHandler
 	// MetaMetaGetHandler sets the operation handler for the meta get operation
 	MetaMetaGetHandler meta.MetaGetHandler
+	// ObjectsObjectsClassDeleteHandler sets the operation handler for the objects class delete operation
+	ObjectsObjectsClassDeleteHandler objects.ObjectsClassDeleteHandler
 	// ObjectsObjectsClassGetHandler sets the operation handler for the objects class get operation
 	ObjectsObjectsClassGetHandler objects.ObjectsClassGetHandler
 	// ObjectsObjectsCreateHandler sets the operation handler for the objects create operation
@@ -371,6 +376,9 @@ func (o *WeaviateAPI) Validate() error {
 	}
 	if o.MetaMetaGetHandler == nil {
 		unregistered = append(unregistered, "meta.MetaGetHandler")
+	}
+	if o.ObjectsObjectsClassDeleteHandler == nil {
+		unregistered = append(unregistered, "objects.ObjectsClassDeleteHandler")
 	}
 	if o.ObjectsObjectsClassGetHandler == nil {
 		unregistered = append(unregistered, "objects.ObjectsClassGetHandler")
@@ -577,6 +585,10 @@ func (o *WeaviateAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/meta"] = meta.NewMetaGet(o.context, o.MetaMetaGetHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/objects/{className}/{id}"] = objects.NewObjectsClassDelete(o.context, o.ObjectsObjectsClassDeleteHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

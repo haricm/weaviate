@@ -24,42 +24,42 @@ import (
 	"github.com/semi-technologies/weaviate/entities/models"
 )
 
-// ObjectsClassGetHandlerFunc turns a function with the right signature into a objects class get handler
-type ObjectsClassGetHandlerFunc func(ObjectsClassGetParams, *models.Principal) middleware.Responder
+// ObjectsClassDeleteHandlerFunc turns a function with the right signature into a objects class delete handler
+type ObjectsClassDeleteHandlerFunc func(ObjectsClassDeleteParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn ObjectsClassGetHandlerFunc) Handle(params ObjectsClassGetParams, principal *models.Principal) middleware.Responder {
+func (fn ObjectsClassDeleteHandlerFunc) Handle(params ObjectsClassDeleteParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
-// ObjectsClassGetHandler interface for that can handle valid objects class get params
-type ObjectsClassGetHandler interface {
-	Handle(ObjectsClassGetParams, *models.Principal) middleware.Responder
+// ObjectsClassDeleteHandler interface for that can handle valid objects class delete params
+type ObjectsClassDeleteHandler interface {
+	Handle(ObjectsClassDeleteParams, *models.Principal) middleware.Responder
 }
 
-// NewObjectsClassGet creates a new http.Handler for the objects class get operation
-func NewObjectsClassGet(ctx *middleware.Context, handler ObjectsClassGetHandler) *ObjectsClassGet {
-	return &ObjectsClassGet{Context: ctx, Handler: handler}
+// NewObjectsClassDelete creates a new http.Handler for the objects class delete operation
+func NewObjectsClassDelete(ctx *middleware.Context, handler ObjectsClassDeleteHandler) *ObjectsClassDelete {
+	return &ObjectsClassDelete{Context: ctx, Handler: handler}
 }
 
-/*ObjectsClassGet swagger:route GET /objects/{className}/{id} objects objectsClassGet
+/*ObjectsClassDelete swagger:route DELETE /objects/{className}/{id} objects objectsClassDelete
 
-Get a specific Object based on its class and UUID. Also available as Websocket bus.
+Delete object based on its class and UUID.
 
-Get a single data object
+Delete a single data object.
 
 */
-type ObjectsClassGet struct {
+type ObjectsClassDelete struct {
 	Context *middleware.Context
-	Handler ObjectsClassGetHandler
+	Handler ObjectsClassDeleteHandler
 }
 
-func (o *ObjectsClassGet) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (o *ObjectsClassDelete) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	route, rCtx, _ := o.Context.RouteInfo(r)
 	if rCtx != nil {
 		r = rCtx
 	}
-	var Params = NewObjectsClassGetParams()
+	var Params = NewObjectsClassDeleteParams()
 
 	uprinc, aCtx, err := o.Context.Authorize(r, route)
 	if err != nil {
