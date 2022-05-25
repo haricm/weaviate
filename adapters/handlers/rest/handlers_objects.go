@@ -125,13 +125,13 @@ func (h *objectHandlers) findOne(params objects.ObjectsClassGetParams,
 	if params.Include != nil {
 		class, err := h.manager.GetObjectsClass(params.HTTPRequest.Context(), principal, params.ID)
 		if err != nil {
-			return objects.NewObjectsGetBadRequest().
+			return objects.NewObjectsClassGetBadRequest().
 				WithPayload(errPayloadFromSingleErr(err))
 		}
 
 		additional, err = parseIncludeParam(params.Include, h.modulesProvider, true, class)
 		if err != nil {
-			return objects.NewObjectsGetBadRequest().
+			return objects.NewObjectsClassGetBadRequest().
 				WithPayload(errPayloadFromSingleErr(err))
 		}
 	}
@@ -140,12 +140,12 @@ func (h *objectHandlers) findOne(params objects.ObjectsClassGetParams,
 	if err != nil {
 		switch err.(type) {
 		case errors.Forbidden:
-			return objects.NewObjectsGetForbidden().
+			return objects.NewObjectsClassGetForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
 		case usecasesObjects.ErrNotFound:
-			return objects.NewObjectsGetNotFound()
+			return objects.NewObjectsClassGetNotFound()
 		default:
-			return objects.NewObjectsGetInternalServerError().
+			return objects.NewObjectsClassGetInternalServerError().
 				WithPayload(errPayloadFromSingleErr(err))
 		}
 	}
@@ -155,7 +155,7 @@ func (h *objectHandlers) findOne(params objects.ObjectsClassGetParams,
 		object.Properties = h.extendPropertiesWithAPILinks(propertiesMap)
 	}
 
-	return objects.NewObjectsGetOK().WithPayload(object)
+	return objects.NewObjectsClassGetOK().WithPayload(object)
 }
 
 func (h *objectHandlers) getObjects(params objects.ObjectsListParams,
@@ -237,17 +237,17 @@ func (h *objectHandlers) deleteOne(params objects.ObjectsClassDeleteParams,
 	if err != nil {
 		switch err.(type) {
 		case errors.Forbidden:
-			return objects.NewObjectsDeleteForbidden().
+			return objects.NewObjectsClassDeleteForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
 		case usecasesObjects.ErrNotFound:
-			return objects.NewObjectsDeleteNotFound()
+			return objects.NewObjectsClassDeleteNotFound()
 		default:
-			return objects.NewObjectsDeleteInternalServerError().
+			return objects.NewObjectsClassDeleteInternalServerError().
 				WithPayload(errPayloadFromSingleErr(err))
 		}
 	}
 
-	return objects.NewObjectsDeleteNoContent()
+	return objects.NewObjectsClassDeleteNoContent()
 }
 
 func (h *objectHandlers) headObject(params objects.ObjectsHeadParams,

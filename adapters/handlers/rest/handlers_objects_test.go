@@ -20,9 +20,12 @@ import (
 	"github.com/semi-technologies/weaviate/adapters/handlers/rest/operations/objects"
 	"github.com/semi-technologies/weaviate/entities/additional"
 	"github.com/semi-technologies/weaviate/entities/models"
+	"github.com/semi-technologies/weaviate/usecases/auth/authorization/errors"
 	"github.com/semi-technologies/weaviate/usecases/config"
+	usecasesObjects "github.com/semi-technologies/weaviate/usecases/objects"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	stderrors "errors"
 )
 
 func TestEnrichObjectsWithLinks(t *testing.T) {
@@ -214,7 +217,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 				}
 				h := &objectHandlers{manager: fakeManager}
 				res := h.getObject(objects.ObjectsGetParams{HTTPRequest: httptest.NewRequest("GET", "/v1/objects", nil)}, nil)
-				parsed, ok := res.(*objects.ObjectsGetOK)
+				parsed, ok := res.(*objects.ObjectsClassGetOK)
 				require.True(t, ok)
 				assert.Equal(t, test.expectedResult, parsed.Payload)
 			})
@@ -437,10 +440,11 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 		}
 	})
 
-	t.Run("get object", func(t *testing.T) {
+	t.Run("find one", func(t *testing.T) {
 		type test struct {
 			name           string
 			object         *models.Object
+			err            error
 			expectedResult *models.Object
 		}
 
@@ -483,18 +487,41 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 					},
 				}},
 			},
+			{
+				name: "error forbbiden",
+				err:  errors.NewForbidden(&models.Principal{}, "get", "Myclass/123"),
+			},
+			{
+				name: "use case err not found",
+				err:  usecasesObjects.ErrNotFound{},
+			},
+			{
+				name: "any other error",
+				err:  stderrors.New("any error"),
+			},
 		}
 
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
 				fakeManager := &fakeManager{
 					getObjectReturn: test.object,
+					getObjectErr:    test.err,
 				}
 				h := &objectHandlers{manager: fakeManager}
-				res := h.getObject(objects.ObjectsGetParams{HTTPRequest: httptest.NewRequest("GET", "/v1/objects", nil)}, nil)
-				parsed, ok := res.(*objects.ObjectsGetOK)
+				req := objects.ObjectsClassGetParams{
+					HTTPRequest: httptest.NewRequest("GET", "/v1/objects/Foo/123", nil),
+					ClassName:   "Foo",
+					ID:          "123",
+				}
+				res := h.findOne(req, nil)
+				parsed, ok := res.(*objects.ObjectsClassGetOK)
+				if test.err != nil {
+					require.False(t, ok)
+					return
+				}
 				require.True(t, ok)
 				assert.Equal(t, test.expectedResult, parsed.Payload)
+
 			})
 		}
 	})
@@ -652,7 +679,9 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 }
 
 type fakeManager struct {
-	getObjectReturn    *models.Object
+	getObjectReturn *models.Object
+	getObjectErr    error
+
 	addObjectReturn    *models.Object
 	getObjectsReturn   []*models.Object
 	updateObjectReturn *models.Object
@@ -671,7 +700,7 @@ func (f *fakeManager) ValidateObject(_ context.Context, _ *models.Principal, _ *
 }
 
 func (f *fakeManager) GetObject(_ context.Context, _ *models.Principal, class string, _ strfmt.UUID, _ additional.Properties) (*models.Object, error) {
-	return f.getObjectReturn, nil
+	return f.getObjectReturn, f.getObjectErr
 }
 
 func (f *fakeManager) GetObjectsClass(ctx context.Context, principal *models.Principal, id strfmt.UUID) (*models.Class, error) {
