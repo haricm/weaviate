@@ -29,8 +29,8 @@ func Test_DeleteObjectsWithSameId(t *testing.T) {
 		cls = "MyClass"
 		id  = strfmt.UUID("5a1cd361-1e0d-42ae-bd52-ee09cb5f31cc")
 	)
+
 	manager, vectorRepo := newDeleteDependency()
-	vectorRepo = &fakeVectorRepo{}
 	vectorRepo.On("ObjectByID", mock.Anything, mock.Anything, mock.Anything).Return(&search.Result{
 		ClassName: cls,
 	}, nil).Once()

@@ -94,7 +94,8 @@ type ModulesProvider interface {
 func NewManager(locks locks, schemaManager schemaManager,
 	config *config.WeaviateConfig, logger logrus.FieldLogger,
 	authorizer authorizer, vectorizer VectorizerProvider, vectorRepo VectorRepo,
-	modulesProvider ModulesProvider) *Manager {
+	modulesProvider ModulesProvider,
+) *Manager {
 	return &Manager{
 		config:             config,
 		locks:              locks,

@@ -45,8 +45,7 @@ func (d *DB) PutObject(ctx context.Context, obj *models.Object,
 	return nil
 }
 
-func (d *DB) DeleteObject(ctx context.Context, className string,
-	id strfmt.UUID) error {
+func (d *DB) DeleteObject(ctx context.Context, className string, id strfmt.UUID) error {
 	idx := d.GetIndex(schema.ClassName(className))
 	if idx == nil {
 		return fmt.Errorf("delete from non-existing index for %s", className)

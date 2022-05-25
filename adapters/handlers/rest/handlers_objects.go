@@ -362,8 +362,8 @@ func setupObjectHandlers(api *operations.WeaviateAPI,
 		ObjectsValidateHandlerFunc(h.validateObject)
 	api.ObjectsObjectsGetHandler = objects.
 		ObjectsGetHandlerFunc(h.getObject) // deprecated by finOne
-	api.ObjectsObjectsClassGetHandler =
-		objects.ObjectsClassGetHandlerFunc(h.findOne)
+	api.ObjectsObjectsClassGetHandler = objects.
+		ObjectsClassGetHandlerFunc(h.findOne)
 	api.ObjectsObjectsDeleteHandler = objects.
 		ObjectsDeleteHandlerFunc(h.deleteObject) // deprecated by deleteOne
 	api.ObjectsObjectsClassDeleteHandler = objects.

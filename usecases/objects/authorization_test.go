@@ -64,7 +64,7 @@ func Test_Kinds_Authorization(t *testing.T) {
 			expectedVerb:     "delete",
 			expectedResource: "objects/class/foo",
 		},
-		{ //deprecated by the one above
+		{ // deprecated by the one above
 			methodName:       "DeleteObject",
 			additionalArgs:   []interface{}{"", strfmt.UUID("foo")},
 			expectedVerb:     "delete",

@@ -20,7 +20,7 @@ import (
 )
 
 func Test_Objects(t *testing.T) {
-	//t.Run("setup", func(t *testing.T) {
+	// t.Run("setup", func(t *testing.T) {
 	createObjectClass(t, &models.Class{
 		Class: "TestObject",
 		ModuleConfig: map[string]interface{}{

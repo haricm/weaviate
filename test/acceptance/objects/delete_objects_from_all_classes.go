@@ -166,7 +166,7 @@ func deleteClassObject(t *testing.T) {
 			t.Errorf("object must exist err: %v", err)
 		}
 		if resp.Payload == nil {
-			t.Errorf("payload of an exising object cannot be empty")
+			t.Errorf("payload of an existing object cannot be empty")
 		}
 	}
 
