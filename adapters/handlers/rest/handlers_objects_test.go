@@ -593,9 +593,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 	})
 
 	t.Run("find one", func(t *testing.T) {
-		var (
-			cls = "MyClass"
-		)
+		cls := "MyClass"
 		type test struct {
 			name           string
 			object         *models.Object
@@ -676,15 +674,12 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 				}
 				require.True(t, ok)
 				assert.Equal(t, test.expectedResult, parsed.Payload)
-
 			})
 		}
 	})
 
 	t.Run("delete one", func(t *testing.T) {
-		var (
-			cls = "MyClass"
-		)
+		cls := "MyClass"
 		type test struct {
 			name string
 			err  error
@@ -726,11 +721,9 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 					return
 				}
 				require.True(t, ok)
-
 			})
 		}
 	})
-
 }
 
 type fakeManager struct {
