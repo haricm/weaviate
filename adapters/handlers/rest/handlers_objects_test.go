@@ -16,6 +16,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	stderrors "errors"
+
 	"github.com/go-openapi/strfmt"
 	"github.com/semi-technologies/weaviate/adapters/handlers/rest/operations/objects"
 	"github.com/semi-technologies/weaviate/entities/additional"
@@ -25,7 +27,6 @@ import (
 	usecasesObjects "github.com/semi-technologies/weaviate/usecases/objects"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	stderrors "errors"
 )
 
 func TestEnrichObjectsWithLinks(t *testing.T) {
@@ -162,7 +163,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 		}
 	})
 
-	t.Run("get object", func(t *testing.T) {
+	t.Run("get object deprecated by find one", func(t *testing.T) {
 		type test struct {
 			name           string
 			object         *models.Object
@@ -440,92 +441,6 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 		}
 	})
 
-	t.Run("find one", func(t *testing.T) {
-		type test struct {
-			name           string
-			object         *models.Object
-			err            error
-			expectedResult *models.Object
-		}
-
-		tests := []test{
-			{
-				name:           "without props - noaction changes",
-				object:         &models.Object{Class: "Foo", Properties: nil},
-				expectedResult: &models.Object{Class: "Foo", Properties: nil},
-			},
-			{
-				name: "without ref props - noaction changes",
-				object: &models.Object{Class: "Foo", Properties: map[string]interface{}{
-					"name":           "hello world",
-					"numericalField": 134,
-				}},
-				expectedResult: &models.Object{Class: "Foo", Properties: map[string]interface{}{
-					"name":           "hello world",
-					"numericalField": 134,
-				}},
-			},
-			{
-				name: "with a ref prop - no origin configured",
-				object: &models.Object{Class: "Foo", Properties: map[string]interface{}{
-					"name":           "hello world",
-					"numericalField": 134,
-					"someRef": models.MultipleRef{
-						&models.SingleRef{
-							Beacon: "weaviate://localhost/85f78e29-5937-4390-a121-5379f262b4e5",
-						},
-					},
-				}},
-				expectedResult: &models.Object{Class: "Foo", Properties: map[string]interface{}{
-					"name":           "hello world",
-					"numericalField": 134,
-					"someRef": models.MultipleRef{
-						&models.SingleRef{
-							Beacon: "weaviate://localhost/85f78e29-5937-4390-a121-5379f262b4e5",
-							Href:   "/v1/objects/85f78e29-5937-4390-a121-5379f262b4e5",
-						},
-					},
-				}},
-			},
-			{
-				name: "error forbbiden",
-				err:  errors.NewForbidden(&models.Principal{}, "get", "Myclass/123"),
-			},
-			{
-				name: "use case err not found",
-				err:  usecasesObjects.ErrNotFound{},
-			},
-			{
-				name: "any other error",
-				err:  stderrors.New("any error"),
-			},
-		}
-
-		for _, test := range tests {
-			t.Run(test.name, func(t *testing.T) {
-				fakeManager := &fakeManager{
-					getObjectReturn: test.object,
-					getObjectErr:    test.err,
-				}
-				h := &objectHandlers{manager: fakeManager}
-				req := objects.ObjectsClassGetParams{
-					HTTPRequest: httptest.NewRequest("GET", "/v1/objects/Foo/123", nil),
-					ClassName:   "Foo",
-					ID:          "123",
-				}
-				res := h.findOne(req, nil)
-				parsed, ok := res.(*objects.ObjectsClassGetOK)
-				if test.err != nil {
-					require.False(t, ok)
-					return
-				}
-				require.True(t, ok)
-				assert.Equal(t, test.expectedResult, parsed.Payload)
-
-			})
-		}
-	})
-
 	t.Run("get objects", func(t *testing.T) {
 		type test struct {
 			name           string
@@ -676,6 +591,146 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("find one", func(t *testing.T) {
+		var (
+			cls = "MyClass"
+		)
+		type test struct {
+			name           string
+			object         *models.Object
+			err            error
+			expectedResult *models.Object
+		}
+
+		tests := []test{
+			{
+				name:           "without props - noaction changes",
+				object:         &models.Object{Class: cls, Properties: nil},
+				expectedResult: &models.Object{Class: cls, Properties: nil},
+			},
+			{
+				name: "without ref props - noaction changes",
+				object: &models.Object{Class: cls, Properties: map[string]interface{}{
+					"name":           "hello world",
+					"numericalField": 134,
+				}},
+				expectedResult: &models.Object{Class: cls, Properties: map[string]interface{}{
+					"name":           "hello world",
+					"numericalField": 134,
+				}},
+			},
+			{
+				name: "with a ref prop - no origin configured",
+				object: &models.Object{Class: cls, Properties: map[string]interface{}{
+					"name":           "hello world",
+					"numericalField": 134,
+					"someRef": models.MultipleRef{
+						&models.SingleRef{
+							Beacon: "weaviate://localhost/85f78e29-5937-4390-a121-5379f262b4e5",
+						},
+					},
+				}},
+				expectedResult: &models.Object{Class: cls, Properties: map[string]interface{}{
+					"name":           "hello world",
+					"numericalField": 134,
+					"someRef": models.MultipleRef{
+						&models.SingleRef{
+							Beacon: "weaviate://localhost/85f78e29-5937-4390-a121-5379f262b4e5",
+							Href:   "/v1/objects/85f78e29-5937-4390-a121-5379f262b4e5",
+						},
+					},
+				}},
+			},
+			{
+				name: "error forbbiden",
+				err:  errors.NewForbidden(&models.Principal{}, "get", "Myclass/123"),
+			},
+			{
+				name: "use case err not found",
+				err:  usecasesObjects.ErrNotFound{},
+			},
+			{
+				name: "any other error",
+				err:  stderrors.New("unknown error"),
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				fakeManager := &fakeManager{
+					getObjectReturn: test.object,
+					getObjectErr:    test.err,
+				}
+				h := &objectHandlers{manager: fakeManager}
+				req := objects.ObjectsClassGetParams{
+					HTTPRequest: httptest.NewRequest("GET", "/v1/objects/MyClass/123", nil),
+					ClassName:   cls,
+					ID:          "123",
+				}
+				res := h.findOne(req, nil)
+				parsed, ok := res.(*objects.ObjectsClassGetOK)
+				if test.err != nil {
+					require.False(t, ok)
+					return
+				}
+				require.True(t, ok)
+				assert.Equal(t, test.expectedResult, parsed.Payload)
+
+			})
+		}
+	})
+
+	t.Run("delete one", func(t *testing.T) {
+		var (
+			cls = "MyClass"
+		)
+		type test struct {
+			name string
+			err  error
+		}
+
+		tests := []test{
+			{
+				name: "without props - noaction changes",
+			},
+			{
+				name: "error forbbiden",
+				err:  errors.NewForbidden(&models.Principal{}, "get", "Myclass/123"),
+			},
+			{
+				name: "use case err not found",
+				err:  usecasesObjects.ErrNotFound{},
+			},
+			{
+				name: "unknown error",
+				err:  stderrors.New("any error"),
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				fakeManager := &fakeManager{
+					deleteObjectReturn: test.err,
+				}
+				h := &objectHandlers{manager: fakeManager}
+				req := objects.ObjectsClassDeleteParams{
+					HTTPRequest: httptest.NewRequest("GET", "/v1/objects/MyClass/123", nil),
+					ClassName:   cls,
+					ID:          "123",
+				}
+				res := h.deleteOne(req, nil)
+				_, ok := res.(*objects.ObjectsClassDeleteNoContent)
+				if test.err != nil {
+					require.False(t, ok)
+					return
+				}
+				require.True(t, ok)
+
+			})
+		}
+	})
+
 }
 
 type fakeManager struct {
@@ -685,6 +740,7 @@ type fakeManager struct {
 	addObjectReturn    *models.Object
 	getObjectsReturn   []*models.Object
 	updateObjectReturn *models.Object
+	deleteObjectReturn error
 }
 
 func (f *fakeManager) HeadObject(context.Context, *models.Principal, strfmt.UUID) (bool, error) {
@@ -724,7 +780,7 @@ func (f *fakeManager) MergeObject(_ context.Context, _ *models.Principal, _ strf
 }
 
 func (f *fakeManager) DeleteObject(_ context.Context, _ *models.Principal, class string, _ strfmt.UUID) error {
-	panic("not implemented") // TODO: Implement
+	return f.deleteObjectReturn
 }
 
 func (f *fakeManager) AddObjectReference(_ context.Context, _ *models.Principal, _ strfmt.UUID, _ string, _ *models.SingleRef) error {
