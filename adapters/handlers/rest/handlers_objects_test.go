@@ -163,7 +163,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 		}
 	})
 
-	t.Run("get object deprecated by find one", func(t *testing.T) {
+	t.Run("get object deprecated", func(t *testing.T) {
 		type test struct {
 			name           string
 			object         *models.Object
@@ -217,7 +217,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 					getObjectReturn: test.object,
 				}
 				h := &objectHandlers{manager: fakeManager}
-				res := h.getObject(objects.ObjectsGetParams{HTTPRequest: httptest.NewRequest("GET", "/v1/objects", nil)}, nil)
+				res := h.getObjectDeprecated(objects.ObjectsGetParams{HTTPRequest: httptest.NewRequest("GET", "/v1/objects", nil)}, nil)
 				parsed, ok := res.(*objects.ObjectsClassGetOK)
 				require.True(t, ok)
 				assert.Equal(t, test.expectedResult, parsed.Payload)
@@ -592,7 +592,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 		}
 	})
 
-	t.Run("find one", func(t *testing.T) {
+	t.Run("get object", func(t *testing.T) {
 		cls := "MyClass"
 		type test struct {
 			name           string
@@ -666,7 +666,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 					ClassName:   cls,
 					ID:          "123",
 				}
-				res := h.findOne(req, nil)
+				res := h.getObject(req, nil)
 				parsed, ok := res.(*objects.ObjectsClassGetOK)
 				if test.err != nil {
 					require.False(t, ok)
@@ -678,7 +678,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 		}
 	})
 
-	t.Run("delete one", func(t *testing.T) {
+	t.Run("delete object", func(t *testing.T) {
 		cls := "MyClass"
 		type test struct {
 			name string
@@ -714,7 +714,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 					ClassName:   cls,
 					ID:          "123",
 				}
-				res := h.deleteOne(req, nil)
+				res := h.deleteObject(req, nil)
 				_, ok := res.(*objects.ObjectsClassDeleteNoContent)
 				if test.err != nil {
 					require.False(t, ok)

@@ -102,17 +102,18 @@ func (h *objectHandlers) validateObject(params objects.ObjectsValidateParams,
 	return objects.NewObjectsValidateOK()
 }
 
-func (h *objectHandlers) getObject(params objects.ObjectsGetParams,
+func (h *objectHandlers) getObjectDeprecated(params objects.ObjectsGetParams,
 	principal *models.Principal) middleware.Responder {
 	ps := objects.ObjectsClassGetParams{
 		HTTPRequest: params.HTTPRequest,
 		ID:          params.ID,
 		Include:     params.Include,
 	}
-	return h.findOne(ps, principal)
+	return h.getObject(ps, principal)
 }
 
-func (h *objectHandlers) findOne(params objects.ObjectsClassGetParams,
+// getObject gets object of a specific class
+func (h *objectHandlers) getObject(params objects.ObjectsClassGetParams,
 	principal *models.Principal) middleware.Responder {
 	var additional additional.Properties
 
@@ -221,17 +222,17 @@ func (h *objectHandlers) updateObject(params objects.ObjectsUpdateParams,
 	return objects.NewObjectsUpdateOK().WithPayload(object)
 }
 
-func (h *objectHandlers) deleteObject(params objects.ObjectsDeleteParams,
+func (h *objectHandlers) deleteObjectDeprecated(params objects.ObjectsDeleteParams,
 	principal *models.Principal) middleware.Responder {
 	ps := objects.ObjectsClassDeleteParams{
 		HTTPRequest: params.HTTPRequest,
 		ID:          params.ID,
 	}
-	return h.deleteOne(ps, principal)
+	return h.deleteObject(ps, principal)
 }
 
-// deleteOne single object
-func (h *objectHandlers) deleteOne(params objects.ObjectsClassDeleteParams,
+// deleteObject delete a single object of giving class
+func (h *objectHandlers) deleteObject(params objects.ObjectsClassDeleteParams,
 	principal *models.Principal) middleware.Responder {
 	err := h.manager.DeleteObject(params.HTTPRequest.Context(), principal, params.ClassName, params.ID)
 	if err != nil {
@@ -361,13 +362,13 @@ func setupObjectHandlers(api *operations.WeaviateAPI,
 	api.ObjectsObjectsValidateHandler = objects.
 		ObjectsValidateHandlerFunc(h.validateObject)
 	api.ObjectsObjectsGetHandler = objects.
-		ObjectsGetHandlerFunc(h.getObject) // deprecated by finOne
+		ObjectsGetHandlerFunc(h.getObjectDeprecated)
 	api.ObjectsObjectsClassGetHandler = objects.
-		ObjectsClassGetHandlerFunc(h.findOne)
+		ObjectsClassGetHandlerFunc(h.getObject)
 	api.ObjectsObjectsDeleteHandler = objects.
-		ObjectsDeleteHandlerFunc(h.deleteObject) // deprecated by deleteOne
+		ObjectsDeleteHandlerFunc(h.deleteObjectDeprecated)
 	api.ObjectsObjectsClassDeleteHandler = objects.
-		ObjectsClassDeleteHandlerFunc(h.deleteOne)
+		ObjectsClassDeleteHandlerFunc(h.deleteObject)
 	api.ObjectsObjectsHeadHandler = objects.
 		ObjectsHeadHandlerFunc(h.headObject)
 	api.ObjectsObjectsListHandler = objects.
