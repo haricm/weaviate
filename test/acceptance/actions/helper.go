@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-openapi/strfmt"
 	"github.com/semi-technologies/weaviate/client/objects"
+	"github.com/semi-technologies/weaviate/client/schema"
 	"github.com/semi-technologies/weaviate/entities/models"
 	"github.com/semi-technologies/weaviate/test/acceptance/helper"
 	testhelper "github.com/semi-technologies/weaviate/test/helper"
@@ -85,4 +86,20 @@ func assertGetObjectFailsEventually(t *testing.T, uuid strfmt.UUID) error {
 	testhelper.AssertEventuallyEqual(t, true, checkThunk)
 
 	return err
+}
+
+func assertCreateObjectClass(t *testing.T, class *models.Class) {
+	params := schema.NewSchemaObjectsCreateParams().WithObjectClass(class)
+	resp, err := helper.Client(t).Schema.SchemaObjectsCreate(params, nil)
+	helper.AssertRequestOk(t, resp, err, nil)
+}
+
+func assertDeleteObjectClass(t *testing.T, class string) {
+	delRes, err := deleteClassObject(t, class)
+	helper.AssertRequestOk(t, delRes, err, nil)
+}
+
+func deleteClassObject(t *testing.T, class string) (*schema.SchemaObjectsDeleteOK, error) {
+	delParams := schema.NewSchemaObjectsDeleteParams().WithClassName(class)
+	return helper.Client(t).Schema.SchemaObjectsDelete(delParams, nil)
 }
