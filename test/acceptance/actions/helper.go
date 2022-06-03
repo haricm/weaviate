@@ -42,22 +42,12 @@ func assertCreateObject(t *testing.T, className string, schema map[string]interf
 }
 
 func assertGetObject(t *testing.T, class string, uuid strfmt.UUID) *models.Object {
-	req := objects.NewObjectsClassGetParams().WithID(uuid)
-	if class != "" {
-		req.WithClassName(class)
-	}
-	getResp, err := helper.Client(t).Objects.ObjectsClassGet(req, nil)
-
-	var object *models.Object
-
-	helper.AssertRequestOk(t, getResp, err, func() {
-		object = getResp.Payload
-	})
-
-	return object
+	obj, err := getObject(t, class, uuid)
+	helper.AssertRequestOk(t, obj, err, nil)
+	return obj
 }
 
-func assertGetObjectEventually(t *testing.T, uuid strfmt.UUID) *models.Object {
+func assertGetObjectEventually(t *testing.T, class string, uuid strfmt.UUID) *models.Object {
 	var (
 		resp *objects.ObjectsGetOK
 		err  error
@@ -101,6 +91,18 @@ func assertCreateObjectClass(t *testing.T, class *models.Class) {
 func assertDeleteObjectClass(t *testing.T, class string) {
 	delRes, err := deleteClassObject(t, class)
 	helper.AssertRequestOk(t, delRes, err, nil)
+}
+
+func getObject(t *testing.T, class string, uuid strfmt.UUID) (*models.Object, error) {
+	req := objects.NewObjectsClassGetParams().WithID(uuid)
+	if class != "" {
+		req.WithClassName(class)
+	}
+	getResp, err := helper.Client(t).Objects.ObjectsClassGet(req, nil)
+	if err != nil {
+		return nil, err
+	}
+	return getResp.Payload, nil
 }
 
 func deleteClassObject(t *testing.T, class string) (*schema.SchemaObjectsDeleteOK, error) {

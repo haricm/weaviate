@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_ClassObjectHTTP(t *testing.T) {
+func Test_ObjectHTTP(t *testing.T) {
 	t.Run("HEAD", headObject)
 	t.Run("PUT", updateObjects)
 	t.Run("PATCH", patchObjects)
@@ -36,7 +36,7 @@ func Test_ClassObjectHTTP(t *testing.T) {
 
 func headObject(t *testing.T) {
 	t.Parallel()
-	cls := "TestClassObjectHTTPHead"
+	cls := "TestObjectHTTPHead"
 	// test setup
 	assertCreateObjectClass(t, &models.Class{
 		Class:      cls,
@@ -68,7 +68,7 @@ func headObject(t *testing.T) {
 
 func updateObjects(t *testing.T) {
 	t.Parallel()
-	cls := "TestClassObjectHTTPUpdate"
+	cls := "TestObjectHTTPUpdate"
 	// test setup
 	assertCreateObjectClass(t, &models.Class{
 		Class: cls,
@@ -108,7 +108,7 @@ func updateObjects(t *testing.T) {
 		"testDateTime":    time.Now(),
 		"testString":      "wibbly",
 	})
-	assertGetObjectEventually(t, uuid)
+	assertGetObjectEventually(t, cls, uuid)
 	expected := map[string]interface{}{
 		"testNumber":    2.0,
 		"testTrueFalse": true,
@@ -136,8 +136,8 @@ func updateObjects(t *testing.T) {
 func patchObjects(t *testing.T) {
 	t.Parallel()
 	var (
-		cls        = "TestClassObjectHTTPPatch"
-		friend_cls = "TestClassObjectHTTPPatchFriend"
+		cls        = "TestObjectHTTPPatch"
+		friend_cls = "TestObjectHTTPPatchFriend"
 		mconfig    = map[string]interface{}{
 			"text2vec-contextionary": map[string]interface{}{
 				"vectorizeClassName": true,
@@ -185,11 +185,7 @@ func patchObjects(t *testing.T) {
 		"integer1": 2.0,
 		"string1":  "wibbly",
 	})
-	assertGetObjectEventually(t, uuid)
-
 	friendID := assertCreateObject(t, friend_cls, nil)
-	assertGetObjectEventually(t, friendID)
-
 	expected := map[string]interface{}{
 		"integer1": json.Number("2"),
 		"number1":  json.Number("3"),
@@ -237,8 +233,8 @@ func deleteObject(t *testing.T) {
 	t.Parallel()
 	var (
 		id     = strfmt.UUID("21111111-1111-1111-1111-111111111111")
-		classA = "TestClassObjectHTTPDeleteA"
-		classB = "TestClassObjectHTTPDeleteB"
+		classA = "TestObjectHTTPDeleteA"
+		classB = "TestObjectHTTPDeleteB"
 		props  = []*models.Property{
 			{
 				Name:     "text",

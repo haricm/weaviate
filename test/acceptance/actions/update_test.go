@@ -29,7 +29,7 @@ import (
 func updateObjectsDeprecated(t *testing.T) {
 	t.Run("update and set number", func(t *testing.T) {
 		uuid := assertCreateObject(t, "TestObject", map[string]interface{}{})
-		assertGetObjectEventually(t, uuid)
+		assertGetObjectEventually(t, "TestObject", uuid)
 
 		schema := models.PropertySchema(map[string]interface{}{
 			"testNumber": 41.0,
@@ -58,7 +58,7 @@ func updateObjectsDeprecated(t *testing.T) {
 
 	t.Run("update and set string", func(t *testing.T) {
 		uuid := assertCreateObject(t, "TestObject", map[string]interface{}{})
-		assertGetObjectEventually(t, uuid)
+		assertGetObjectEventually(t, "TestObject", uuid)
 
 		schema := models.PropertySchema(map[string]interface{}{
 			"testString": "wibbly wobbly",
@@ -84,7 +84,7 @@ func updateObjectsDeprecated(t *testing.T) {
 	t.Run("update and set bool", func(t *testing.T) {
 		t.Parallel()
 		uuid := assertCreateObject(t, "TestObject", map[string]interface{}{})
-		assertGetObjectEventually(t, uuid)
+		assertGetObjectEventually(t, "TestObject", uuid)
 
 		schema := models.PropertySchema(map[string]interface{}{
 			"testTrueFalse": true,
@@ -110,9 +110,9 @@ func updateObjectsDeprecated(t *testing.T) {
 
 	t.Run("can patch object with cref", func(t *testing.T) {
 		thingToRefID := assertCreateObject(t, "ObjectTestThing", nil)
-		assertGetObjectEventually(t, thingToRefID)
+		assertGetObjectEventually(t, "ObjectTestThing", thingToRefID)
 		objectID := assertCreateObject(t, "TestObject", nil)
-		assertGetObjectEventually(t, objectID)
+		assertGetObjectEventually(t, "TestObject", objectID)
 
 		merge := &models.Object{
 			Class: "TestObject",
