@@ -41,8 +41,12 @@ func assertCreateObject(t *testing.T, className string, schema map[string]interf
 	return objectID
 }
 
-func assertGetObject(t *testing.T, uuid strfmt.UUID) *models.Object {
-	getResp, err := helper.Client(t).Objects.ObjectsGet(objects.NewObjectsGetParams().WithID(uuid), nil)
+func assertGetObject(t *testing.T, class string, uuid strfmt.UUID) *models.Object {
+	req := objects.NewObjectsClassGetParams().WithID(uuid)
+	if class != "" {
+		req.WithClassName(class)
+	}
+	getResp, err := helper.Client(t).Objects.ObjectsClassGet(req, nil)
 
 	var object *models.Object
 

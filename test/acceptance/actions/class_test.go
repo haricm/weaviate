@@ -123,7 +123,7 @@ func updateObjects(t *testing.T) {
 	updateResp, err := helper.Client(t).Objects.ObjectsClassPut(params, nil)
 	helper.AssertRequestOk(t, updateResp, err, nil)
 	actual := func() interface{} {
-		obj := assertGetObject(t, uuid)
+		obj := assertGetObject(t, cls, uuid)
 		props := obj.Properties.(map[string]interface{})
 		if props["testNumber"] != nil {
 			props["testNumber"], _ = props["testNumber"].(json.Number).Float64()
@@ -220,7 +220,7 @@ func patchObjects(t *testing.T) {
 	updateResp, err := helper.Client(t).Objects.ObjectsClassPatch(params, nil)
 	helper.AssertRequestOk(t, updateResp, err, nil)
 	actual := func() interface{} {
-		obj := assertGetObject(t, uuid)
+		obj := assertGetObject(t, cls, uuid)
 		props := obj.Properties.(map[string]interface{})
 		return props
 	}

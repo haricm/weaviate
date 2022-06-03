@@ -45,7 +45,7 @@ func updateObjectsDeprecated(t *testing.T) {
 		helper.AssertRequestOk(t, updateResp, err, nil)
 
 		actualThunk := func() interface{} {
-			updatedObject := assertGetObject(t, uuid)
+			updatedObject := assertGetObject(t, update.Class, uuid)
 			updatedSchema := updatedObject.Properties.(map[string]interface{})
 			if updatedSchema["testNumber"] == nil {
 				return nil
@@ -74,7 +74,7 @@ func updateObjectsDeprecated(t *testing.T) {
 		helper.AssertRequestOk(t, updateResp, err, nil)
 
 		actualThunk := func() interface{} {
-			updatedObject := assertGetObject(t, uuid)
+			updatedObject := assertGetObject(t, update.Class, uuid)
 			updatedSchema := updatedObject.Properties.(map[string]interface{})
 			return updatedSchema["testString"]
 		}
@@ -101,7 +101,7 @@ func updateObjectsDeprecated(t *testing.T) {
 		helper.AssertRequestOk(t, updateResp, err, nil)
 
 		actualThunk := func() interface{} {
-			updatedObject := assertGetObject(t, uuid)
+			updatedObject := assertGetObject(t, update.Class, uuid)
 			updatedSchema := updatedObject.Properties.(map[string]interface{})
 			return updatedSchema["testTrueFalse"]
 		}
@@ -134,7 +134,7 @@ func updateObjectsDeprecated(t *testing.T) {
 		helper.AssertRequestOk(t, patchResp, err, nil)
 
 		actualThunk := func() interface{} {
-			patchedObject := assertGetObject(t, objectID)
+			patchedObject := assertGetObject(t, merge.Class, objectID)
 
 			rawRef, ok := patchedObject.Properties.(map[string]interface{})["testReference"]
 			if !ok {
