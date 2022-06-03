@@ -13,7 +13,6 @@ package rest
 
 import (
 	"context"
-	stderrors "errors"
 	"fmt"
 	"strings"
 
@@ -26,7 +25,7 @@ import (
 	"github.com/semi-technologies/weaviate/entities/schema/crossref"
 	"github.com/semi-technologies/weaviate/usecases/auth/authorization/errors"
 	"github.com/semi-technologies/weaviate/usecases/config"
-	usecasesObjects "github.com/semi-technologies/weaviate/usecases/objects"
+	uco "github.com/semi-technologies/weaviate/usecases/objects"
 	"github.com/sirupsen/logrus"
 )
 
@@ -67,7 +66,7 @@ func (h *objectHandlers) addObject(params objects.ObjectsCreateParams,
 		case errors.Forbidden:
 			return objects.NewObjectsCreateForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case usecasesObjects.ErrInvalidUserInput:
+		case uco.ErrInvalidUserInput:
 			return objects.NewObjectsCreateUnprocessableEntity().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:
@@ -93,7 +92,7 @@ func (h *objectHandlers) validateObject(params objects.ObjectsValidateParams,
 		case errors.Forbidden:
 			return objects.NewObjectsValidateForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case usecasesObjects.ErrInvalidUserInput:
+		case uco.ErrInvalidUserInput:
 			return objects.NewObjectsValidateUnprocessableEntity().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:
@@ -137,7 +136,7 @@ func (h *objectHandlers) getObject(params objects.ObjectsClassGetParams,
 		case errors.Forbidden:
 			return objects.NewObjectsClassGetForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case usecasesObjects.ErrNotFound:
+		case uco.ErrNotFound:
 			return objects.NewObjectsClassGetNotFound()
 		default:
 			return objects.NewObjectsClassGetInternalServerError().
@@ -202,7 +201,7 @@ func (h *objectHandlers) deleteObject(params objects.ObjectsClassDeleteParams,
 		case errors.Forbidden:
 			return objects.NewObjectsClassDeleteForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case usecasesObjects.ErrNotFound:
+		case uco.ErrNotFound:
 			return objects.NewObjectsClassDeleteNotFound()
 		default:
 			return objects.NewObjectsClassDeleteInternalServerError().
@@ -222,7 +221,7 @@ func (h *objectHandlers) updateObject(params objects.ObjectsClassPutParams,
 		case errors.Forbidden:
 			return objects.NewObjectsClassPutForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case usecasesObjects.ErrInvalidUserInput:
+		case uco.ErrInvalidUserInput:
 			return objects.NewObjectsClassPutUnprocessableEntity().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:
@@ -245,7 +244,7 @@ func (h *objectHandlers) headObject(r objects.ObjectsClassHeadParams,
 	ok, err := h.manager.HeadObject(r.HTTPRequest.Context(), principal, r.ClassName, r.ID)
 	if err != nil {
 		switch {
-		case stderrors.Is(err, usecasesObjects.ErrAccessDenied):
+		case uco.IsErrorAccessDenied(err):
 			return objects.NewObjectsClassHeadForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:
@@ -267,12 +266,12 @@ func (h *objectHandlers) patchObject(params objects.ObjectsClassPatchParams, pri
 	err := h.manager.MergeObject(params.HTTPRequest.Context(), principal, updates)
 	if err != nil {
 		switch {
-		case stderrors.Is(err, usecasesObjects.ErrItemNotFound):
+		case uco.IsErrorNotFound(err):
 			return objects.NewObjectsClassPatchNotFound()
-		case stderrors.Is(err, usecasesObjects.ErrAccessDenied):
+		case uco.IsErrorAccessDenied(err):
 			return objects.NewObjectsClassPatchForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case stderrors.Is(err, usecasesObjects.ErrBadRequest):
+		case uco.IsErrorBadRequest(err):
 			return objects.NewObjectsClassPatchUnprocessableEntity().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:
@@ -293,7 +292,7 @@ func (h *objectHandlers) addObjectReference(params objects.ObjectsReferencesCrea
 		case errors.Forbidden:
 			return objects.NewObjectsReferencesCreateForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case usecasesObjects.ErrNotFound, usecasesObjects.ErrInvalidUserInput:
+		case uco.ErrNotFound, uco.ErrInvalidUserInput:
 			return objects.NewObjectsReferencesCreateUnprocessableEntity().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:
@@ -314,7 +313,7 @@ func (h *objectHandlers) updateObjectReferences(params objects.ObjectsReferences
 		case errors.Forbidden:
 			return objects.NewObjectsReferencesUpdateForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case usecasesObjects.ErrNotFound, usecasesObjects.ErrInvalidUserInput:
+		case uco.ErrNotFound, uco.ErrInvalidUserInput:
 			return objects.NewObjectsReferencesUpdateUnprocessableEntity().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:
@@ -335,7 +334,7 @@ func (h *objectHandlers) deleteObjectReference(params objects.ObjectsReferencesD
 		case errors.Forbidden:
 			return objects.NewObjectsReferencesDeleteForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case usecasesObjects.ErrNotFound, usecasesObjects.ErrInvalidUserInput:
+		case uco.ErrNotFound, uco.ErrInvalidUserInput:
 			return objects.NewObjectsReferencesDeleteNotFound().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:
@@ -348,7 +347,7 @@ func (h *objectHandlers) deleteObjectReference(params objects.ObjectsReferencesD
 }
 
 func setupObjectHandlers(api *operations.WeaviateAPI,
-	manager *usecasesObjects.Manager, config config.Config, logger logrus.FieldLogger,
+	manager *uco.Manager, config config.Config, logger logrus.FieldLogger,
 	modulesProvider ModulesProvider,
 ) {
 	h := &objectHandlers{manager, logger, config, modulesProvider}
