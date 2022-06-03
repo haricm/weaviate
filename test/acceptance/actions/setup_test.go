@@ -96,9 +96,6 @@ func Test_Objects(t *testing.T) {
 	t.Run("removing objects", removingObjects)
 	t.Run("object references", objectReferences)
 	t.Run("updating objects deprecated", updateObjectsDeprecated)
-	t.Run("updating object", updateObjects)
-	t.Run("patch object", patchObjects)
-	t.Run("head object", headObject)
 
 	// tear down
 	assertDeleteObjectClass(t, "ObjectTestThing")
