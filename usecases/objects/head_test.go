@@ -63,7 +63,7 @@ func Test_HeadObject(t *testing.T) {
 			class:   cls,
 			authErr: errAny,
 			wantOK:  false,
-			wantErr: ErrAuthorization,
+			wantErr: ErrAccessDenied,
 		},
 		{
 			class:   cls,

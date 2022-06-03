@@ -626,7 +626,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 		if _, ok := res.(*objects.ObjectsClassPatchNoContent); !ok {
 			t.Errorf("unexpected result %v", res)
 		}
-		fakeManager.patchObjectReturn = fmt.Errorf("access denied %w", usecasesObjects.ErrValidation)
+		fakeManager.patchObjectReturn = fmt.Errorf("access denied %w", usecasesObjects.ErrBadRequest)
 		res = h.patchObject(req, nil)
 		if _, ok := res.(*objects.ObjectsClassPatchUnprocessableEntity); !ok {
 			t.Errorf("expected: %T got: %T", objects.ObjectsClassPatchUnprocessableEntity{}, res)
@@ -636,7 +636,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 		if _, ok := res.(*objects.ObjectsClassPatchNotFound); !ok {
 			t.Errorf("expected: %T got: %T", objects.ObjectsClassPatchNotFound{}, res)
 		}
-		fakeManager.patchObjectReturn = usecasesObjects.ErrAuthorization
+		fakeManager.patchObjectReturn = usecasesObjects.ErrAccessDenied
 		res = h.patchObject(req, nil)
 		if _, ok := res.(*objects.ObjectsClassPatchForbidden); !ok {
 			t.Errorf("expected: %T got: %T", objects.ObjectsClassPatchForbidden{}, res)
@@ -802,7 +802,7 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 			t.Errorf("unexpected result %v", res)
 		}
 
-		m.headObjectErr = usecasesObjects.ErrAuthorization
+		m.headObjectErr = usecasesObjects.ErrAccessDenied
 		res = h.headObject(req, nil)
 		if _, ok := res.(*objects.ObjectsClassHeadForbidden); !ok {
 			t.Errorf("expected: %T got: %T", objects.ObjectsClassHeadForbidden{}, res)

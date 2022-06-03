@@ -245,7 +245,7 @@ func (h *objectHandlers) headObject(r objects.ObjectsClassHeadParams,
 	ok, err := h.manager.HeadObject(r.HTTPRequest.Context(), principal, r.ClassName, r.ID)
 	if err != nil {
 		switch {
-		case stderrors.Is(err, usecasesObjects.ErrAuthorization):
+		case stderrors.Is(err, usecasesObjects.ErrAccessDenied):
 			return objects.NewObjectsClassHeadForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:
@@ -269,10 +269,10 @@ func (h *objectHandlers) patchObject(params objects.ObjectsClassPatchParams, pri
 		switch {
 		case stderrors.Is(err, usecasesObjects.ErrItemNotFound):
 			return objects.NewObjectsClassPatchNotFound()
-		case stderrors.Is(err, usecasesObjects.ErrAuthorization):
+		case stderrors.Is(err, usecasesObjects.ErrAccessDenied):
 			return objects.NewObjectsClassPatchForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case stderrors.Is(err, usecasesObjects.ErrValidation):
+		case stderrors.Is(err, usecasesObjects.ErrBadRequest):
 			return objects.NewObjectsClassPatchUnprocessableEntity().
 				WithPayload(errPayloadFromSingleErr(err))
 		default:

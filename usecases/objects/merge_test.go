@@ -72,7 +72,7 @@ func Test_MergeObject(t *testing.T) {
 			updated: &models.Object{
 				ID: uuid,
 			},
-			expectedErr: ErrValidation,
+			expectedErr: ErrBadRequest,
 			stage:       stageInit,
 		},
 		{
@@ -81,13 +81,13 @@ func Test_MergeObject(t *testing.T) {
 			updated: &models.Object{
 				Class: cls,
 			},
-			expectedErr: ErrValidation,
+			expectedErr: ErrBadRequest,
 			stage:       stageInit,
 		},
 		{
 			name:        "empty updates",
 			previous:    nil,
-			expectedErr: ErrValidation,
+			expectedErr: ErrBadRequest,
 			stage:       stageInit,
 		},
 		{
@@ -132,7 +132,7 @@ func Test_MergeObject(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: ErrValidation,
+			expectedErr: ErrBadRequest,
 			errExists:   errAny,
 			stage:       stageAuthorization,
 		},

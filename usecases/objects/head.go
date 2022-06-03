@@ -26,7 +26,7 @@ func (m *Manager) HeadObject(ctx context.Context, principal *models.Principal, c
 		path = fmt.Sprintf("objects/%s/%s", class, id)
 	}
 	if err := m.authorizer.Authorize(principal, "head", path); err != nil {
-		return false, fmt.Errorf("%w: %v", ErrAuthorization, err)
+		return false, fmt.Errorf("%w: %v", ErrAccessDenied, err)
 	}
 
 	unlock, err := m.locks.LockConnector()

@@ -20,13 +20,29 @@ import (
 var (
 	// ErrItemNotFound item doesn't exist
 	ErrItemNotFound = errors.New("item not found")
-	// ErrValidation invalid inputs
-	ErrValidation = errors.New("validation")
-	//  ErrAuthorization access denied
-	ErrAuthorization = errors.New("authorization")
-	// ErrServiceInternal error
+	// ErrBadRequest because of invalid inputs
+	ErrBadRequest = errors.New("validation")
+	//  ErrAccessDenied access denied
+	ErrAccessDenied = errors.New("authorization")
+	// ErrServiceInternal is an internal service error
 	ErrServiceInternal = errors.New("service internal")
 )
+
+func IsErrorNotFound(err error) bool {
+	return errors.Is(err, ErrItemNotFound)
+}
+
+func IsErrorAccessDenied(err error) bool {
+	return errors.Is(err, ErrAccessDenied)
+}
+
+func IsErrorBadRequest(err error) bool {
+	return errors.Is(err, ErrBadRequest)
+}
+
+func IsErrorInternal(err error) bool {
+	return errors.Is(err, ErrServiceInternal)
+}
 
 // ErrInvalidUserInput indicates a client-side error
 type ErrInvalidUserInput struct {

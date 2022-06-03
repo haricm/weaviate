@@ -164,7 +164,7 @@ func Test_Kinds_Authorization(t *testing.T) {
 
 				require.Len(t, authorizer.calls, 1, "authorizer must be called")
 				aerr := out[len(out)-1].Interface().(error)
-				if !errors.Is(aerr, ErrAuthorization) {
+				if !errors.Is(aerr, ErrAccessDenied) {
 					assert.Equal(t, errors.New("just a test fake"), aerr,
 						"execution must abort with authorizer error")
 				}

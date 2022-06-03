@@ -35,16 +35,16 @@ type MergeDocument struct {
 
 func (m *Manager) MergeObject(ctx context.Context, principal *models.Principal, updates *models.Object) error {
 	if err := m.validateInputs(updates); err != nil {
-		return fmt.Errorf("%w: %v", ErrValidation, err)
+		return fmt.Errorf("%w: %v", ErrBadRequest, err)
 	}
 	cls, id := updates.Class, updates.ID
 	path := fmt.Sprintf("objects/%s/%s", cls, id)
 	if err := m.authorizer.Authorize(principal, "update", path); err != nil {
-		return fmt.Errorf("%w: %v", ErrAuthorization, err)
+		return fmt.Errorf("%w: %v", ErrAccessDenied, err)
 	}
 
 	if err := m.validateObject(ctx, principal, updates); err != nil {
-		return fmt.Errorf("%w: %v", ErrValidation, err)
+		return fmt.Errorf("%w: %v", ErrBadRequest, err)
 	}
 	if updates.Properties == nil {
 		updates.Properties = map[string]interface{}{}
