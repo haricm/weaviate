@@ -33,18 +33,16 @@ type DeleteReferenceInput struct {
 	Reference models.SingleRef
 }
 
-func (m *Manager) DeleteObjectReferenceEx(
+func (m *Manager) DeleteObjectReference(
 	ctx context.Context,
 	principal *models.Principal,
 	input *DeleteReferenceInput,
 ) *Error {
+	deprecatedEndpoint := input.Class == ""
 	res, err := m.getObjectFromRepo(ctx, input.Class, input.ID, additional.Properties{})
 	if err != nil {
 		errnf := ErrNotFound{}
 		if errors.As(err, &errnf) {
-			if input.Class == "" { // for backward comp reasons
-				return &Error{"source object deprecated", StatusBadRequest, err}
-			}
 			return &Error{"source object", StatusNotFound, err}
 		}
 		return &Error{"source object", StatusInternalServerError, err}
@@ -63,6 +61,9 @@ func (m *Manager) DeleteObjectReferenceEx(
 	defer unlock()
 
 	if err := input.validate(ctx, principal, m.schemaManager); err != nil {
+		if deprecatedEndpoint { // for backward comp reasons
+			return &Error{"bad inputs deprecated", StatusNotFound, err}
+		}
 		return &Error{"bad inputs", StatusBadRequest, err}
 	}
 
@@ -123,7 +124,7 @@ func removeReference(obj *models.Object, prop string, ref *models.SingleRef) (ok
 }
 
 // DeleteObjectReference from connected DB
-func (m *Manager) DeleteObjectReference(ctx context.Context, principal *models.Principal,
+func (m *Manager) deleteObjectReferenceDeprecated(ctx context.Context, principal *models.Principal,
 	id strfmt.UUID, propertyName string, property *models.SingleRef,
 ) error {
 	err := m.authorizer.Authorize(principal, "update", fmt.Sprintf("objects/%s", id.String()))

@@ -356,12 +356,14 @@ func (h *objectHandlers) deleteObjectReference(params objects.ObjectsClassRefere
 	}
 	err := h.manager.DeleteObjectReference(params.HTTPRequest.Context(), principal, &input)
 	if err != nil {
-		switch {
-		case err.Forbidden():
+		switch err.Code {
+		case uco.StatusForbidden:
 			return objects.NewObjectsClassReferencesDeleteForbidden().
 				WithPayload(errPayloadFromSingleErr(err))
-		case err.NotFound(), err.BadRequest():
+		case uco.StatusNotFound:
 			return objects.NewObjectsClassReferencesDeleteNotFound()
+		case uco.StatusBadRequest:
+			return objects.NewObjectsClassReferencesDeleteBadRequest().WithPayload(errPayloadFromSingleErr(err))
 		default:
 			return objects.NewObjectsClassReferencesDeleteInternalServerError().
 				WithPayload(errPayloadFromSingleErr(err))
