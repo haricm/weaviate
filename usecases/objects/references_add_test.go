@@ -391,6 +391,8 @@ func Test_ReferenceDelete(t *testing.T) {
 		uri    = strfmt.URI("weaviate://localhost/d18c8e5e-a339-4c15-8af6-56b0cfe33ce7")
 		anyErr = errors.New("any")
 		ref    = models.SingleRef{Beacon: uri}
+		ref2   = &models.SingleRef{Beacon: strfmt.URI("weaviate://localhost/d18c8e5e-a339-4c15-8af6-56b0cfe33ce5")}
+		ref3   = &models.SingleRef{Beacon: strfmt.URI("weaviate://localhost/d18c8e5e-a339-4c15-8af6-56b0cfe33ce6")}
 		req    = DeleteReferenceInput{
 			Class:     cls,
 			ID:        id,
@@ -399,14 +401,23 @@ func Test_ReferenceDelete(t *testing.T) {
 		}
 	)
 
-	fake_properties := func() (models.MultipleRef, int) {
-		return models.MultipleRef{&ref}, 0
+	fake_properties := func(refs ...*models.SingleRef) map[string]interface{} {
+		mrefs := make(models.MultipleRef, len(refs))
+		for i, r := range refs {
+			mrefs[i] = r
+		}
+		return map[string]interface{}{
+			"name": "MyZoo",
+			prop:   mrefs,
+		}
 	}
 
 	tests := []struct {
 		Name string
 		// inputs
-		Req DeleteReferenceInput
+		Req           DeleteReferenceInput
+		properties    interface{}
+		NewSrcRefsLen int
 		// outputs
 		ExpectedRef models.SingleRef
 		WantCode    int
@@ -472,10 +483,47 @@ func Test_ReferenceDelete(t *testing.T) {
 			Req:  DeleteReferenceInput{Class: cls, ID: id, Property: "-"}, Stage: 1,
 			WantCode: StatusBadRequest,
 		},
-
-		{Name: "update valid reference", Req: req, Stage: 3},
 		{
-			Name: "internal error", Req: req, Stage: 3,
+			Name:       "delete one reference",
+			Req:        req,
+			properties: fake_properties(ref2, &ref, ref3), NewSrcRefsLen: 2,
+			Stage: 3,
+		},
+		{
+			Name:       "delete two references",
+			Req:        req,
+			properties: fake_properties(&ref, ref2, &ref), NewSrcRefsLen: 1,
+			Stage: 3,
+		},
+		{
+			Name:       "delete all references",
+			Req:        req,
+			properties: fake_properties(&ref, &ref), NewSrcRefsLen: 0,
+			Stage: 3,
+		},
+		{
+			Name:       "reference not found",
+			Req:        req,
+			properties: fake_properties(ref2, ref3), NewSrcRefsLen: 2,
+			Stage: 2,
+		},
+		{
+			Name:       "wrong reference type",
+			Req:        req,
+			properties: map[string]interface{}{prop: "wrong reference type"}, NewSrcRefsLen: 0,
+			Stage: 2,
+		},
+		{
+			Name:       "empty properties list",
+			Req:        req,
+			properties: nil, NewSrcRefsLen: 0,
+			Stage: 2,
+		},
+		{
+			Name:       "internal error",
+			Req:        req,
+			properties: fake_properties(ref2, &ref, ref3), NewSrcRefsLen: 3,
+			Stage:      3,
 			WantCode:   StatusInternalServerError,
 			ErrPutRefs: anyErr,
 			WantErr:    anyErr,
@@ -488,13 +536,9 @@ func Test_ReferenceDelete(t *testing.T) {
 			m.authorizer.Err = tc.ErrAuth
 			m.locks.Err = tc.ErrLock
 			m.schemaManager.(*fakeSchemaManager).GetschemaErr = tc.ErrSchema
-			refs, _ := fake_properties()
 			srcObj := &search.Result{
 				ClassName: cls,
-				Schema: map[string]interface{}{
-					"name": "MyZoo",
-					prop:  refs,
-				},
+				Schema:    tc.properties,
 			}
 			if tc.SrcNotFound {
 				srcObj = nil
@@ -519,7 +563,14 @@ func Test_ReferenceDelete(t *testing.T) {
 					t.Errorf("wrapped error expected: %v, got %v", tc.WantErr, err.Err)
 				}
 
+			} else if tc.properties != nil {
+				refs, ok := srcObj.Schema.(map[string]interface{})[prop].(models.MultipleRef)
+				if g, w := len(refs), tc.NewSrcRefsLen; ok && g != w {
+					t.Errorf("length of source reference after deletion got:%v, want:%v", g, w)
+				}
+
 			}
+
 			m.repo.AssertExpectations(t)
 		})
 	}

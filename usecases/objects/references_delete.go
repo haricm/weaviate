@@ -102,15 +102,7 @@ func (req *DeleteReferenceInput) validate(
 // removeReference removes ref from object obj with property prop.
 // It returns ok (removal took place) and an error message
 func removeReference(obj *models.Object, prop string, ref *models.SingleRef) (ok bool, errmsg string) {
-	if obj == nil || obj.Properties == nil {
-		return false, ""
-	}
-
-	properties, ok := obj.Properties.(map[string]interface{})
-	if !ok {
-		return false, "property is not well formed"
-	}
-
+	properties := obj.Properties.(map[string]interface{})
 	if properties == nil || properties[prop] == nil {
 		return false, ""
 	}
