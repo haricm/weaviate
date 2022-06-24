@@ -949,6 +949,7 @@ type fakeManager struct {
 	headObjectErr      *uco.Error
 	addRefErr          *uco.Error
 	putRefErr          *uco.Error
+	deleteRefErr       *uco.Error
 }
 
 func (f *fakeManager) HeadObject(context.Context, *models.Principal, string, strfmt.UUID) (bool, *uco.Error) {
@@ -999,6 +1000,6 @@ func (f *fakeManager) UpdateObjectReferences(context.Context, *models.Principal,
 	return f.putRefErr
 }
 
-func (f *fakeManager) DeleteObjectReference(_ context.Context, _ *models.Principal, _ strfmt.UUID, _ string, _ *models.SingleRef) error {
-	panic("not implemented") // TODO: Implement
+func (f *fakeManager) DeleteObjectReference(context.Context, *models.Principal, *uco.DeleteReferenceInput) *uco.Error {
+	return f.deleteRefErr
 }
