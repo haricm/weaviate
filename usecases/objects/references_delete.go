@@ -19,8 +19,6 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/semi-technologies/weaviate/entities/additional"
 	"github.com/semi-technologies/weaviate/entities/models"
-	"github.com/semi-technologies/weaviate/entities/schema"
-	"github.com/semi-technologies/weaviate/usecases/objects/validation"
 )
 
 // DeleteReferenceInput represents required inputs to delete a reference from an existing object.
@@ -64,18 +62,20 @@ func (m *Manager) DeleteObjectReferenceEx(
 	}
 	defer unlock()
 
-	validator := validation.New(schema.Schema{}, m.exists, m.config)
-	if err := input.validate(ctx, principal, validator, m.schemaManager); err != nil {
+	if err := input.validate(ctx, principal, m.schemaManager); err != nil {
 		return &Error{"bad inputs", StatusBadRequest, err}
 	}
+
 	obj := res.Object()
-	if obj == nil || obj.Properties == nil {
+	ok, errmsg := removeReference(obj, input.Property, &input.Reference)
+	if errmsg != "" {
+		return &Error{errmsg, StatusInternalServerError, nil}
+	}
+	if !ok {
 		return nil
 	}
-	if cause := removeReference(obj, input.Property, &input.Reference); cause != "" {
-		return &Error{cause, StatusInternalServerError, nil}
-	}
 	obj.LastUpdateTimeUnix = m.timeSource.Now()
+
 	err = m.vectorRepo.PutObject(ctx, obj, res.Vector)
 	if err != nil {
 		return &Error{"repo.putobject", StatusInternalServerError, err}
@@ -86,13 +86,9 @@ func (m *Manager) DeleteObjectReferenceEx(
 func (req *DeleteReferenceInput) validate(
 	ctx context.Context,
 	principal *models.Principal,
-	v *validation.Validator,
 	sm schemaManager,
 ) error {
 	if err := validateReferenceName(req.Class, req.Property); err != nil {
-		return err
-	}
-	if err := v.ValidateSingleRef(ctx, &req.Reference, "validate reference"); err != nil {
 		return err
 	}
 
@@ -103,39 +99,35 @@ func (req *DeleteReferenceInput) validate(
 	return validateReferenceSchema(req.Class, req.Property, schema)
 }
 
-func removeReference(obj *models.Object, propertyName string,
-	property *models.SingleRef,
-) string {
-	props := obj.Properties
-	if props == nil {
-		return ""
+// removeReference removes ref from object obj with property prop.
+// It returns ok (removal took place) and an error message
+func removeReference(obj *models.Object, prop string, ref *models.SingleRef) (ok bool, errmsg string) {
+	if obj == nil || obj.Properties == nil {
+		return false, ""
 	}
 
-	properties, ok := props.(map[string]interface{})
+	properties, ok := obj.Properties.(map[string]interface{})
 	if !ok {
-		return "property is not well formed"
+		return false, "property is not well formed"
 	}
 
-	if len(properties) == 0 || properties[propertyName] == nil {
-		return ""
+	if properties == nil || properties[prop] == nil {
+		return false, ""
 	}
 
-	refs, ok := properties[propertyName].(models.MultipleRef)
+	refs, ok := properties[prop].(models.MultipleRef)
 	if !ok {
-		return "reference list is not well formed"
+		return false, "source list is not well formed"
 	}
-	if len(refs) == 0 {
-		return ""
-	}
+
 	newrefs := make(models.MultipleRef, 0, len(refs))
-	for _, ref := range refs {
-		if ref.Beacon != property.Beacon {
-			newrefs = append(newrefs, ref)
+	for _, r := range refs {
+		if r.Beacon != ref.Beacon {
+			newrefs = append(newrefs, r)
 		}
 	}
-	properties[propertyName] = newrefs
-	//obj.Properties = props
-	return ""
+	properties[prop] = newrefs
+	return len(refs) != len(newrefs), ""
 }
 
 // DeleteObjectReference from connected DB
