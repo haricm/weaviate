@@ -48,50 +48,6 @@ func (o *ObjectsClassReferencesDeleteNoContent) WriteResponse(rw http.ResponseWr
 	rw.WriteHeader(204)
 }
 
-// ObjectsClassReferencesDeleteBadRequestCode is the HTTP code returned for type ObjectsClassReferencesDeleteBadRequest
-const ObjectsClassReferencesDeleteBadRequestCode int = 400
-
-/*ObjectsClassReferencesDeleteBadRequest Malformed request.
-
-swagger:response objectsClassReferencesDeleteBadRequest
-*/
-type ObjectsClassReferencesDeleteBadRequest struct {
-
-	/*
-	  In: Body
-	*/
-	Payload *models.ErrorResponse `json:"body,omitempty"`
-}
-
-// NewObjectsClassReferencesDeleteBadRequest creates ObjectsClassReferencesDeleteBadRequest with default headers values
-func NewObjectsClassReferencesDeleteBadRequest() *ObjectsClassReferencesDeleteBadRequest {
-
-	return &ObjectsClassReferencesDeleteBadRequest{}
-}
-
-// WithPayload adds the payload to the objects class references delete bad request response
-func (o *ObjectsClassReferencesDeleteBadRequest) WithPayload(payload *models.ErrorResponse) *ObjectsClassReferencesDeleteBadRequest {
-	o.Payload = payload
-	return o
-}
-
-// SetPayload sets the payload to the objects class references delete bad request response
-func (o *ObjectsClassReferencesDeleteBadRequest) SetPayload(payload *models.ErrorResponse) {
-	o.Payload = payload
-}
-
-// WriteResponse to the client
-func (o *ObjectsClassReferencesDeleteBadRequest) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
-
-	rw.WriteHeader(400)
-	if o.Payload != nil {
-		payload := o.Payload
-		if err := producer.Produce(rw, payload); err != nil {
-			panic(err) // let the recovery middleware deal with this
-		}
-	}
-}
-
 // ObjectsClassReferencesDeleteUnauthorizedCode is the HTTP code returned for type ObjectsClassReferencesDeleteUnauthorized
 const ObjectsClassReferencesDeleteUnauthorizedCode int = 401
 
@@ -196,6 +152,50 @@ func (o *ObjectsClassReferencesDeleteNotFound) SetPayload(payload *models.ErrorR
 func (o *ObjectsClassReferencesDeleteNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(404)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
+// ObjectsClassReferencesDeleteUnprocessableEntityCode is the HTTP code returned for type ObjectsClassReferencesDeleteUnprocessableEntity
+const ObjectsClassReferencesDeleteUnprocessableEntityCode int = 422
+
+/*ObjectsClassReferencesDeleteUnprocessableEntity Request body is well-formed (i.e., syntactically correct), but semantically erroneous. Are you sure the property exists or that it is a class?
+
+swagger:response objectsClassReferencesDeleteUnprocessableEntity
+*/
+type ObjectsClassReferencesDeleteUnprocessableEntity struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.ErrorResponse `json:"body,omitempty"`
+}
+
+// NewObjectsClassReferencesDeleteUnprocessableEntity creates ObjectsClassReferencesDeleteUnprocessableEntity with default headers values
+func NewObjectsClassReferencesDeleteUnprocessableEntity() *ObjectsClassReferencesDeleteUnprocessableEntity {
+
+	return &ObjectsClassReferencesDeleteUnprocessableEntity{}
+}
+
+// WithPayload adds the payload to the objects class references delete unprocessable entity response
+func (o *ObjectsClassReferencesDeleteUnprocessableEntity) WithPayload(payload *models.ErrorResponse) *ObjectsClassReferencesDeleteUnprocessableEntity {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the objects class references delete unprocessable entity response
+func (o *ObjectsClassReferencesDeleteUnprocessableEntity) SetPayload(payload *models.ErrorResponse) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *ObjectsClassReferencesDeleteUnprocessableEntity) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(422)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

@@ -1253,12 +1253,6 @@ func init() {
           "204": {
             "description": "Successfully deleted."
           },
-          "400": {
-            "description": "Malformed request.",
-            "schema": {
-              "$ref": "#/definitions/ErrorResponse"
-            }
-          },
           "401": {
             "description": "Unauthorized or invalid credentials."
           },
@@ -1270,6 +1264,12 @@ func init() {
           },
           "404": {
             "description": "Successful query result but no resource was found.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Request body is well-formed (i.e., syntactically correct), but semantically erroneous. Are you sure the property exists or that it is a class?",
             "schema": {
               "$ref": "#/definitions/ErrorResponse"
             }
@@ -4804,12 +4804,6 @@ func init() {
           "204": {
             "description": "Successfully deleted."
           },
-          "400": {
-            "description": "Malformed request.",
-            "schema": {
-              "$ref": "#/definitions/ErrorResponse"
-            }
-          },
           "401": {
             "description": "Unauthorized or invalid credentials."
           },
@@ -4821,6 +4815,12 @@ func init() {
           },
           "404": {
             "description": "Successful query result but no resource was found.",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Request body is well-formed (i.e., syntactically correct), but semantically erroneous. Are you sure the property exists or that it is a class?",
             "schema": {
               "$ref": "#/definitions/ErrorResponse"
             }

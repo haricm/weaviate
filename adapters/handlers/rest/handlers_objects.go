@@ -347,7 +347,6 @@ func (h *objectHandlers) putObjectReferences(params objects.ObjectsClassReferenc
 func (h *objectHandlers) deleteObjectReference(params objects.ObjectsClassReferencesDeleteParams,
 	principal *models.Principal,
 ) middleware.Responder {
-
 	input := uco.DeleteReferenceInput{
 		Class:     params.ClassName,
 		ID:        params.ID,
@@ -363,7 +362,8 @@ func (h *objectHandlers) deleteObjectReference(params objects.ObjectsClassRefere
 		case uco.StatusNotFound:
 			return objects.NewObjectsClassReferencesDeleteNotFound()
 		case uco.StatusBadRequest:
-			return objects.NewObjectsClassReferencesDeleteBadRequest().WithPayload(errPayloadFromSingleErr(err))
+			return objects.NewObjectsClassReferencesDeleteUnprocessableEntity().
+				WithPayload(errPayloadFromSingleErr(err))
 		default:
 			return objects.NewObjectsClassReferencesDeleteInternalServerError().
 				WithPayload(errPayloadFromSingleErr(err))
