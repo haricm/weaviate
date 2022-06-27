@@ -549,7 +549,7 @@ func Test_ReferenceDelete(t *testing.T) {
 				m.repo.On("PutObject", mock.Anything, mock.Anything).Return(tc.ErrPutRefs).Once()
 			}
 
-			err := m.DeleteObjectReferenceEx(context.Background(), nil, &tc.Req)
+			err := m.DeleteObjectReference(context.Background(), nil, &tc.Req)
 			if tc.WantCode != 0 {
 				code := 0
 				if err != nil {
