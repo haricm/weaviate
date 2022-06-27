@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/semi-technologies/weaviate/adapters/handlers/rest/operations/objects"
 	"github.com/semi-technologies/weaviate/client/batch"
 	"github.com/semi-technologies/weaviate/client/objects"
 	"github.com/semi-technologies/weaviate/entities/models"
@@ -29,12 +30,14 @@ import (
 )
 
 func Test_ObjectHTTP(t *testing.T) {
-	t.Run("HEAD", headObject)
-	t.Run("PUT", updateObjects)
-	t.Run("PATCH", patchObjects)
-	t.Run("DELETE", deleteObject)
-	t.Run("PostReference", postReference)
-	t.Run("PutReferences", putReferences)
+	// t.Run("HEAD", headObject)
+	// t.Run("PUT", updateObjects)
+	// t.Run("PATCH", patchObjects)
+	// t.Run("DELETE", deleteObject)
+	// t.Run("PostReference", postReference)
+	// t.Run("PutReferences", putReferences)
+	t.Run("DeleteReference", deleteReference)
+
 }
 
 func headObject(t *testing.T) {
@@ -517,4 +520,105 @@ func putReferences(t *testing.T) {
 	if _, ok := err.(*objects.ObjectsClassReferencesPutUnprocessableEntity); !ok {
 		t.Errorf("error type expected: %T, got %T", objects.ObjectsClassReferencesPutUnprocessableEntity{}, err)
 	}
+}
+
+func deleteReference(t *testing.T) {
+	t.Parallel()
+	var (
+		cls           = "TestObjectHTTPUpdateReferences"
+		first_friend  = "TestObjectHTTPUpdateReferencesFriendFirst"
+		second_friend = "TestObjectHTTPUpdateReferencesFriendSecond"
+		mconfig       = map[string]interface{}{
+			"text2vec-contextionary": map[string]interface{}{
+				"vectorizeClassName": true,
+			},
+		}
+	)
+	// test setup
+	assertCreateObjectClass(t, &models.Class{
+		Class:        first_friend,
+		ModuleConfig: mconfig,
+		Properties:   []*models.Property{},
+	})
+	defer deleteClassObject(t, first_friend)
+
+	assertCreateObjectClass(t, &models.Class{
+		Class:        second_friend,
+		ModuleConfig: mconfig,
+		Properties:   []*models.Property{},
+	})
+	defer deleteClassObject(t, second_friend)
+
+	assertCreateObjectClass(t, &models.Class{
+		Class:        cls,
+		ModuleConfig: mconfig,
+		Properties: []*models.Property{
+			{
+				Name:     "number",
+				DataType: []string{"number"},
+			},
+			{
+				Name:     "friend",
+				DataType: []string{first_friend, second_friend},
+			},
+		},
+	})
+	defer deleteClassObject(t, cls)
+
+	first_friendID := assertCreateObject(t, first_friend, nil)
+	second_friendID := assertCreateObject(t, second_friend, nil)
+	uuid := assertCreateObject(t, cls, map[string]interface{}{
+		"number": 2.0,
+		"friend": []interface{}{
+			map[string]interface{}{
+				"beacon": fmt.Sprintf("weaviate://localhost/%s", first_friendID),
+				"href":   fmt.Sprintf("/v1/objects/%s", first_friendID),
+			},
+			map[string]interface{}{
+				"beacon": fmt.Sprintf("weaviate://localhost/%s", second_friendID),
+				"href":   fmt.Sprintf("/v1/objects/%s", second_friendID),
+			},
+		},
+	})
+
+	expected := map[string]interface{}{
+		"number": json.Number("2"),
+		"friend": []interface{}{
+			map[string]interface{}{
+				"beacon": fmt.Sprintf("weaviate://localhost/%s", first_friendID),
+				"href":   fmt.Sprintf("/v1/objects/%s", first_friendID),
+			},
+		},
+	}
+
+	updateObj := crossref.New("localhost", second_friendID).SingleRef()
+	// delete second reference
+	params := objects.NewObjectsClassReferencesDeleteParams().WithClassName(cls)
+	params.WithID(uuid).WithBody(updateObj).WithPropertyName("friend")
+	resp, err := helper.Client(t).Objects.ObjectsClassReferencesDelete(params, nil)
+	helper.AssertRequestOk(t, resp, err, nil)
+	obj := assertGetObject(t, cls, uuid)
+	actual := obj.Properties.(map[string]interface{})
+	assert.Equal(t, expected, actual)
+
+	// delete same reference again
+	resp, err = helper.Client(t).Objects.ObjectsClassReferencesDelete(params, nil)
+	helper.AssertRequestOk(t, resp, err, nil)
+	obj = assertGetObject(t, cls, uuid)
+	actual = obj.Properties.(map[string]interface{})
+	assert.Equal(t, expected, actual)
+
+	// delete last reference
+	expected = map[string]interface{}{
+		"number": json.Number("2"),
+		"friend": []interface{}{},
+	}
+	updateObj = crossref.New("localhost", first_friendID).SingleRef()
+	params.WithID(uuid).WithBody(updateObj).WithPropertyName("friend")
+	resp, err = helper.Client(t).Objects.ObjectsClassReferencesDelete(params, nil)
+	helper.AssertRequestOk(t, resp, err, nil)
+	obj = assertGetObject(t, cls, uuid)
+	actual = obj.Properties.(map[string]interface{})
+	assert.Equal(t, expected, actual)
+
 }
