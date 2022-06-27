@@ -933,6 +933,56 @@ func TestEnrichObjectsWithLinks(t *testing.T) {
 			t.Errorf("expected: %T got: %T", objects.ObjectsClassReferencesPutUnprocessableEntity{}, res)
 		}
 	})
+
+	t.Run("DeleteReference", func(t *testing.T) {
+		m := &fakeManager{}
+		h := &objectHandlers{manager: m}
+		req := objects.ObjectsClassReferencesDeleteParams{
+			HTTPRequest:  httptest.NewRequest("HEAD", "/v1/objects/MyClass/123/references/prop", nil),
+			ClassName:    "MyClass",
+			ID:           "123",
+			Body:         new(models.SingleRef),
+			PropertyName: "prop",
+		}
+		res := h.deleteObjectReference(req, nil)
+		if _, ok := res.(*objects.ObjectsClassReferencesDeleteNoContent); !ok {
+			t.Errorf("unexpected result %v", res)
+		}
+
+		m.deleteRefErr = &uco.Error{Code: uco.StatusForbidden}
+		res = h.deleteObjectReference(req, nil)
+		if _, ok := res.(*objects.ObjectsClassReferencesDeleteForbidden); !ok {
+			t.Errorf("expected: %T got: %T", objects.ObjectsClassReferencesDeleteForbidden{}, res)
+		}
+		// source object not found
+		m.deleteRefErr = &uco.Error{Code: uco.StatusNotFound}
+		res = h.deleteObjectReference(req, nil)
+		if _, ok := res.(*objects.ObjectsClassReferencesDeleteNotFound); !ok {
+			t.Errorf("expected: %T got: %T", objects.ObjectsClassReferencesDeleteNotFound{}, res)
+		}
+
+		m.deleteRefErr = &uco.Error{Code: uco.StatusInternalServerError}
+		res = h.deleteObjectReference(req, nil)
+		if _, ok := res.(*objects.ObjectsClassReferencesDeleteInternalServerError); !ok {
+			t.Errorf("expected: %T got: %T", objects.ObjectsClassReferencesDeleteInternalServerError{}, res)
+		}
+		m.deleteRefErr = &uco.Error{Code: uco.StatusBadRequest}
+		res = h.deleteObjectReference(req, nil)
+		if _, ok := res.(*objects.ObjectsClassReferencesDeleteUnprocessableEntity); !ok {
+			t.Errorf("expected: %T got: %T", objects.ObjectsClassReferencesDeleteUnprocessableEntity{}, res)
+		}
+		// same test as before but using old request
+		oldRequest := objects.ObjectsReferencesDeleteParams{
+			HTTPRequest:  req.HTTPRequest,
+			Body:         req.Body,
+			ID:           req.ID,
+			PropertyName: req.ClassName,
+		}
+		res = h.deleteObjectReferenceDeprecated(oldRequest, nil)
+		if _, ok := res.(*objects.ObjectsClassReferencesDeleteUnprocessableEntity); !ok {
+			t.Errorf("expected: %T got: %T", objects.ObjectsClassReferencesDeleteUnprocessableEntity{}, res)
+		}
+	})
 }
 
 type fakeManager struct {

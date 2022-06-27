@@ -36,7 +36,6 @@ func Test_ObjectHTTP(t *testing.T) {
 	t.Run("PostReference", postReference)
 	t.Run("PutReferences", putReferences)
 	t.Run("DeleteReference", deleteReference)
-
 }
 
 func headObject(t *testing.T) {
