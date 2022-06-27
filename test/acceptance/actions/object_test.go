@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/go-openapi/strfmt"
-	"github.com/semi-technologies/weaviate/adapters/handlers/rest/operations/objects"
 	"github.com/semi-technologies/weaviate/client/batch"
 	"github.com/semi-technologies/weaviate/client/objects"
 	"github.com/semi-technologies/weaviate/entities/models"
@@ -30,12 +29,12 @@ import (
 )
 
 func Test_ObjectHTTP(t *testing.T) {
-	// t.Run("HEAD", headObject)
-	// t.Run("PUT", updateObjects)
-	// t.Run("PATCH", patchObjects)
-	// t.Run("DELETE", deleteObject)
-	// t.Run("PostReference", postReference)
-	// t.Run("PutReferences", putReferences)
+	t.Run("HEAD", headObject)
+	t.Run("PUT", updateObjects)
+	t.Run("PATCH", patchObjects)
+	t.Run("DELETE", deleteObject)
+	t.Run("PostReference", postReference)
+	t.Run("PutReferences", putReferences)
 	t.Run("DeleteReference", deleteReference)
 
 }
@@ -525,9 +524,9 @@ func putReferences(t *testing.T) {
 func deleteReference(t *testing.T) {
 	t.Parallel()
 	var (
-		cls           = "TestObjectHTTPUpdateReferences"
-		first_friend  = "TestObjectHTTPUpdateReferencesFriendFirst"
-		second_friend = "TestObjectHTTPUpdateReferencesFriendSecond"
+		cls           = "TestObjectHTTPDeleteReference"
+		first_friend  = "TestObjectHTTPDeleteReferenceFriendFirst"
+		second_friend = "TestObjectHTTPDeleteReferenceFriendSecond"
 		mconfig       = map[string]interface{}{
 			"text2vec-contextionary": map[string]interface{}{
 				"vectorizeClassName": true,
@@ -580,7 +579,6 @@ func deleteReference(t *testing.T) {
 			},
 		},
 	})
-
 	expected := map[string]interface{}{
 		"number": json.Number("2"),
 		"friend": []interface{}{
@@ -621,4 +619,26 @@ func deleteReference(t *testing.T) {
 	actual = obj.Properties.(map[string]interface{})
 	assert.Equal(t, expected, actual)
 
+	// property is not part of the schema
+	params.WithPropertyName("unknown")
+	_, err = helper.Client(t).Objects.ObjectsClassReferencesDelete(params, nil)
+	if _, ok := err.(*objects.ObjectsClassReferencesDeleteUnprocessableEntity); !ok {
+		t.Errorf("error type expected: %T, got %T", objects.ObjectsClassReferencesDeleteUnprocessableEntity{}, err)
+	}
+	params.WithPropertyName("friend")
+
+	// This ID doesn't exist
+	params.WithID("e7cd261a-0000-0000-0000-d7b8e7b5c9ea")
+	_, err = helper.Client(t).Objects.ObjectsClassReferencesDelete(params, nil)
+	if _, ok := err.(*objects.ObjectsClassReferencesDeleteNotFound); !ok {
+		t.Errorf("error type expected: %T, got %T", objects.ObjectsClassReferencesDeleteNotFound{}, err)
+	}
+	params.WithID(uuid)
+
+	// bad request since body is required
+	params.WithID(uuid).WithBody(nil).WithPropertyName("friend")
+	_, err = helper.Client(t).Objects.ObjectsClassReferencesDelete(params, nil)
+	if _, ok := err.(*objects.ObjectsClassReferencesDeleteUnprocessableEntity); !ok {
+		t.Errorf("error type expected: %T, got %T", objects.ObjectsClassReferencesDeleteUnprocessableEntity{}, err)
+	}
 }
