@@ -87,7 +87,7 @@ func TestParseCrossReference(t *testing.T) {
 }
 
 func TestSingleRef(t *testing.T) {
-	ref := New(_LocalHost, "class", "c2cd3f91-0160-477e-869a-8da8829e0a4d")
+	ref := NewLocalhost("class", "c2cd3f91-0160-477e-869a-8da8829e0a4d")
 	expected := &models.SingleRef{
 		Beacon: strfmt.URI("weaviate://localhost/class/c2cd3f91-0160-477e-869a-8da8829e0a4d"),
 	}

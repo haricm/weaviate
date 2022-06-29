@@ -105,7 +105,7 @@ func (v *Validator) ValidateSingleRef(ctx context.Context, cref *models.SingleRe
 	}
 
 	// locally check for object existence
-	ok, err := v.exists(ctx, "", ref.TargetID)
+	ok, err := v.exists(ctx, ref.Class, ref.TargetID)
 	if err != nil {
 		return err
 	}

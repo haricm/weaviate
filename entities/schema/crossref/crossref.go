@@ -91,12 +91,7 @@ func New(peerName string, class string, target strfmt.UUID) *Ref {
 }
 
 func NewLocalhost(class string, target strfmt.UUID) *Ref {
-	return &Ref{
-		Local:    true,
-		PeerName: _LocalHost,
-		TargetID: target,
-		Class:    class,
-	}
+	return New(_LocalHost, class, target)
 }
 
 func (r *Ref) String() string {
