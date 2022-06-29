@@ -29,6 +29,7 @@ import (
 )
 
 func Test_ObjectHTTP(t *testing.T) {
+	t.Run("GET", findObject)
 	t.Run("HEAD", headObject)
 	t.Run("PUT", putObject)
 	t.Run("PATCH", patchObject)
@@ -36,6 +37,63 @@ func Test_ObjectHTTP(t *testing.T) {
 	t.Run("PostReference", postReference)
 	t.Run("PutReferences", putReferences)
 	t.Run("DeleteReference", deleteReference)
+}
+
+func findObject(t *testing.T) {
+	t.Parallel()
+	var (
+		cls           = "TestObjectHTTPGet"
+		first_friend  = "TestObjectHTTPGetFriendFirst"
+		second_friend = "TestObjectHTTPGetFriendSecond"
+	)
+
+	// test setup
+	first_uuid := assertCreateObject(t, first_friend, map[string]interface{}{})
+	defer deleteClassObject(t, first_friend)
+	second_uuid := assertCreateObject(t, second_friend, map[string]interface{}{})
+	defer deleteClassObject(t, second_friend)
+
+	assertCreateObjectClass(t, &models.Class{
+		Class:      cls,
+		Vectorizer: "none",
+		Properties: []*models.Property{
+			{
+				Name:     "name",
+				DataType: []string{"string"},
+			},
+			{
+				Name:     "friend",
+				DataType: []string{first_friend, second_friend},
+			},
+		},
+	})
+	// tear down
+	defer deleteClassObject(t, cls)
+	link1 := map[string]interface{}{
+		"beacon": crossref.NewLocalhost("", first_uuid).String(),
+		"href":   fmt.Sprintf("/v1/objects/%s", first_uuid),
+	}
+	link2 := map[string]interface{}{
+		"beacon": crossref.NewLocalhost(second_friend, second_uuid).String(),
+		"href":   fmt.Sprintf("/v1/objects/%s", second_uuid),
+	}
+	expected := map[string]interface{}{
+		"number": json.Number("2"),
+		"friend": []interface{}{link1, link2},
+	}
+
+	uuid := assertCreateObject(t, cls, expected)
+
+	r := objects.NewObjectsClassGetParams().WithID(uuid).WithClassName(cls)
+	resp, err := helper.Client(t).Objects.ObjectsClassGet(r, nil)
+	helper.AssertRequestOk(t, resp, err, nil)
+	assert.Equal(t, expected, resp.Payload.Properties.(map[string]interface{}))
+
+	// check for an object which doesn't exist
+	unknown_uuid := strfmt.UUID("11110000-0000-0000-0000-000011110000")
+	r = objects.NewObjectsClassGetParams().WithID(unknown_uuid).WithClassName(cls)
+	resp, err = helper.Client(t).Objects.ObjectsClassGet(r, nil)
+	helper.AssertRequestFail(t, resp, err, nil)
 }
 
 func headObject(t *testing.T) {
@@ -267,6 +325,8 @@ func deleteObject(t *testing.T) {
 		Vectorizer: "none",
 		Properties: props,
 	})
+	defer deleteClassObject(t, classA)
+
 	assertCreateObjectClass(t, &models.Class{
 		Class:      classB,
 		Vectorizer: "none",
@@ -274,7 +334,6 @@ func deleteObject(t *testing.T) {
 	})
 
 	defer deleteClassObject(t, classB)
-	defer deleteClassObject(t, classA)
 
 	object1 := &models.Object{
 		Class: classA,
