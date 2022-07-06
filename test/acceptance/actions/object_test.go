@@ -771,4 +771,11 @@ func query(t *testing.T) {
 	if n := len(resp.Payload.Objects); n != 1 {
 		t.Errorf("Number of friend objects got:%v want %v", n, 2)
 	}
+
+	unknown_cls := "unknow"
+	listParams.Class = &unknown_cls
+	_, err = helper.Client(t).Objects.ObjectsList(listParams, nil)
+	if _, ok := err.(*objects.ObjectsListNotFound); !ok {
+		t.Errorf("error type expected: %T, got %T", objects.ObjectsListNotFound{}, err)
+	}
 }
