@@ -1031,6 +1031,10 @@ func (f *fakeManager) GetObjects(_ context.Context, _ *models.Principal, _ *int6
 	return f.getObjectsReturn, nil
 }
 
+func (f *fakeManager) Query(_ context.Context, _ *models.Principal, _ *uco.QueryParams) ([]*models.Object, *uco.Error) {
+	return f.getObjectsReturn, nil
+}
+
 func (f *fakeManager) UpdateObject(_ context.Context, _ *models.Principal, class string, _ strfmt.UUID, updates *models.Object) (*models.Object, error) {
 	return updates, f.updateObjectErr
 }
