@@ -85,7 +85,7 @@ for the objects list operation typically these are written to a http.Request
 type ObjectsListParams struct {
 
 	/*Class
-	  Class parameter specifies the class of returned object
+	  Class parameter specifies the class from which to query objects
 
 	*/
 	Class *string

@@ -50,7 +50,7 @@ type ObjectsListParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Class parameter specifies the class of returned object
+	/*Class parameter specifies the class from which to query objects
 	  In: query
 	*/
 	Class *string

@@ -637,6 +637,12 @@ func init() {
           "404": {
             "description": "Successful query result but no resource was found."
           },
+          "422": {
+            "description": "Request body is well-formed (i.e., syntactically correct), but semantically erroneous. Are you sure the class is defined in the configuration file?",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
           "500": {
             "description": "An error has occurred while trying to fulfill the request. Most likely the ErrorResponse will contain more information about the error.",
             "schema": {
@@ -3485,7 +3491,7 @@ func init() {
   "parameters": {
     "CommonClassParameterQuery": {
       "type": "string",
-      "description": "Class parameter specifies the class of returned object",
+      "description": "Class parameter specifies the class from which to query objects",
       "name": "class",
       "in": "query"
     },
@@ -4167,7 +4173,7 @@ func init() {
           },
           {
             "type": "string",
-            "description": "Class parameter specifies the class of returned object",
+            "description": "Class parameter specifies the class from which to query objects",
             "name": "class",
             "in": "query"
           }
@@ -4196,6 +4202,12 @@ func init() {
           },
           "404": {
             "description": "Successful query result but no resource was found."
+          },
+          "422": {
+            "description": "Request body is well-formed (i.e., syntactically correct), but semantically erroneous. Are you sure the class is defined in the configuration file?",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
           },
           "500": {
             "description": "An error has occurred while trying to fulfill the request. Most likely the ErrorResponse will contain more information about the error.",
@@ -7237,7 +7249,7 @@ func init() {
   "parameters": {
     "CommonClassParameterQuery": {
       "type": "string",
-      "description": "Class parameter specifies the class of returned object",
+      "description": "Class parameter specifies the class from which to query objects",
       "name": "class",
       "in": "query"
     },
