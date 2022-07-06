@@ -26,6 +26,7 @@ import (
 	"github.com/semi-technologies/weaviate/entities/schema"
 	"github.com/semi-technologies/weaviate/entities/search"
 	"github.com/semi-technologies/weaviate/entities/storobj"
+	"github.com/semi-technologies/weaviate/usecases/objects"
 	"github.com/semi-technologies/weaviate/usecases/traverser"
 )
 
@@ -187,6 +188,28 @@ func (db *DB) VectorSearch(ctx context.Context, vector []float32, offset, limit 
 	return db.getSearchResults(found, offset, limit), nil
 }
 
+// Query a specific class
+func (d *DB) Query(ctx context.Context, q *objects.QueryInput) (search.Results, *objects.Error) {
+	totalLimit := q.Offset + q.Limit
+	if totalLimit == 0 {
+		return nil, nil
+	}
+	if err := d.validateSort(q.Sort); err != nil {
+		return nil, &objects.Error{Msg: "sorting", Code: objects.StatusBadRequest, Err: err}
+	}
+	idx := d.GetIndex(schema.ClassName(q.Class))
+	if idx == nil {
+		return nil, &objects.Error{Msg: "class not found " + q.Class, Code: objects.StatusNotFound}
+	}
+	res, err := idx.objectSearch(ctx, totalLimit, &q.Filters, nil, q.Sort, q.Additional)
+	if err != nil {
+		return nil, &objects.Error{Msg: "search index " + idx.ID(), Code: objects.StatusInternalServerError, Err: err}
+	}
+	return d.getSearchResults(storobj.SearchResults(res, q.Additional), q.Offset, q.Limit), nil
+}
+
+// ObjectSearch search each index.
+// Deprecated by Query which seacrhces a specific index
 func (d *DB) ObjectSearch(ctx context.Context, offset, limit int,
 	filters *filters.LocalFilter, sort []filters.Sort, additional additional.Properties) (search.Results, error) {
 	return d.objectSearch(ctx, offset, limit, filters, sort, additional)
