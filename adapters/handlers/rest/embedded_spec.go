@@ -607,6 +607,9 @@ func init() {
           },
           {
             "$ref": "#/parameters/CommonOrderParameterQuery"
+          },
+          {
+            "$ref": "#/parameters/CommonClassParameterQuery"
           }
         ],
         "responses": {
@@ -3480,6 +3483,12 @@ func init() {
     }
   },
   "parameters": {
+    "CommonClassParameterQuery": {
+      "type": "string",
+      "description": "Class parameter specifies the class of returned object",
+      "name": "class",
+      "in": "query"
+    },
     "CommonIncludeParameterQuery": {
       "type": "string",
       "description": "Include additional information, such as classification infos. Allowed values include: classification, vector, interpretation",
@@ -4154,6 +4163,12 @@ func init() {
             "type": "string",
             "description": "Order parameter to tell how to order (asc or desc) data within given field",
             "name": "order",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Class parameter specifies the class of returned object",
+            "name": "class",
             "in": "query"
           }
         ],
@@ -7220,6 +7235,12 @@ func init() {
     }
   },
   "parameters": {
+    "CommonClassParameterQuery": {
+      "type": "string",
+      "description": "Class parameter specifies the class of returned object",
+      "name": "class",
+      "in": "query"
+    },
     "CommonIncludeParameterQuery": {
       "type": "string",
       "description": "Include additional information, such as classification infos. Allowed values include: classification, vector, interpretation",

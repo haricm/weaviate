@@ -1305,6 +1305,13 @@
       "name": "order",
       "required": false,
       "type": "string"
+    },
+    "CommonClassParameterQuery": {
+      "description": "Class parameter specifies the class of returned object",
+      "in": "query",
+      "name": "class",
+      "required": false,
+      "type": "string"
     }
   },
   "paths": {
@@ -1375,6 +1382,9 @@
           },
           {
             "$ref": "#/parameters/CommonOrderParameterQuery"
+          },
+          {
+            "$ref": "#/parameters/CommonClassParameterQuery"
           }
         ],
         "responses": {
