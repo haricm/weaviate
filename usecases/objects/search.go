@@ -18,12 +18,31 @@ type QueryInput struct {
 	Additional additional.Properties
 }
 
-func (m *Manager) Query(ctx context.Context, principal *models.Principal,
-	class string,
-	offset, limit *int64,
-	sort, order *string,
-	additional additional.Properties) ([]*models.Object, *Error) {
-	path := fmt.Sprintf("objects/%s", class)
+type QueryParams struct {
+	Class      string
+	Offset     *int64
+	Limit      *int64
+	Sort       *string
+	Order      *string
+	Additional additional.Properties
+}
+
+func (q *QueryParams) inputs(m *Manager) (*QueryInput, error) {
+	smartOffset, smartLimit, err := m.localOffsetLimit(q.Offset, q.Limit)
+	if err != nil {
+		return nil, err
+	}
+	return &QueryInput{
+		Class:      q.Class,
+		Offset:     smartOffset,
+		Limit:      smartLimit,
+		Sort:       m.getSort(q.Sort, q.Order),
+		Additional: q.Additional,
+	}, nil
+}
+
+func (m *Manager) Query(ctx context.Context, principal *models.Principal, params *QueryParams) ([]*models.Object, *Error) {
+	path := fmt.Sprintf("objects/%s", params.Class)
 	if err := m.authorizer.Authorize(principal, "list", path); err != nil {
 		return nil, &Error{path, StatusForbidden, err}
 	}
@@ -33,27 +52,21 @@ func (m *Manager) Query(ctx context.Context, principal *models.Principal,
 	}
 	defer unlock()
 
-	smartOffset, smartLimit, err := m.localOffsetLimit(offset, limit)
+	q, err := params.inputs(m)
 	if err != nil {
 		return nil, &Error{"offset or limit", StatusBadRequest, err}
 	}
-	q := QueryInput{
-		Class:      class,
-		Offset:     smartOffset,
-		Limit:      smartLimit,
-		Sort:       m.getSort(sort, order),
-		Additional: additional}
-	res, rerr := m.vectorRepo.Query(ctx, &q)
-	if err != nil {
+	res, rerr := m.vectorRepo.Query(ctx, q)
+	if rerr != nil {
 		return nil, rerr
 	}
 
 	if m.modulesProvider != nil {
-		res, err = m.modulesProvider.ListObjectsAdditionalExtend(ctx, res, additional.ModuleParams)
+		res, err = m.modulesProvider.ListObjectsAdditionalExtend(ctx, res, q.Additional.ModuleParams)
 		if err != nil {
 			return nil, &Error{"extend results", StatusInternalServerError, err}
 		}
 	}
 
-	return res.ObjectsWithVector(additional.Vector), nil
+	return res.ObjectsWithVector(q.Additional.Vector), nil
 }
