@@ -26,6 +26,7 @@ import (
 	"github.com/semi-technologies/weaviate/test/acceptance/helper"
 	testhelper "github.com/semi-technologies/weaviate/test/helper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ObjectHTTP(t *testing.T) {
@@ -37,6 +38,7 @@ func Test_ObjectHTTP(t *testing.T) {
 	t.Run("PostReference", postReference)
 	t.Run("PutReferences", putReferences)
 	t.Run("DeleteReference", deleteReference)
+	t.Run("Query", query)
 }
 
 func findObject(t *testing.T) {
@@ -713,5 +715,40 @@ func deleteReference(t *testing.T) {
 	_, err = helper.Client(t).Objects.ObjectsClassReferencesDelete(params, nil)
 	if _, ok := err.(*objects.ObjectsClassReferencesDeleteUnprocessableEntity); !ok {
 		t.Errorf("error type expected: %T, got %T", objects.ObjectsClassReferencesDeleteUnprocessableEntity{}, err)
+	}
+}
+
+func query(t *testing.T) {
+	t.Parallel()
+	var (
+		cls          = "TestObjectHTTPQuery"
+		first_friend = "TestObjectHTTPQueryFriend"
+	)
+
+	// test setup
+	assertCreateObject(t, first_friend, map[string]interface{}{})
+	defer deleteClassObject(t, first_friend)
+	assertCreateObjectClass(t, &models.Class{
+		Class:      cls,
+		Vectorizer: "none",
+		Properties: []*models.Property{
+			{
+				Name:     "count",
+				DataType: []string{"int"},
+			},
+		},
+	})
+	// tear down
+	defer deleteClassObject(t, cls)
+	assertCreateObject(t, cls, map[string]interface{}{"count": 1})
+	assertCreateObject(t, cls, map[string]interface{}{"count": 1})
+	listParams := objects.ObjectsListParams{
+		Class: &cls,
+	}
+	resp, err := helper.Client(t).Objects.ObjectsList(&listParams, nil)
+	require.Nil(t, err, "should not error", resp)
+
+	if n := len(resp.Payload.Objects); n != 2 {
+		t.Errorf("Number of object got:%v want %v", n, 2)
 	}
 }
