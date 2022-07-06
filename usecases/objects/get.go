@@ -51,15 +51,6 @@ func (m *Manager) GetObject(ctx context.Context, principal *models.Principal, cl
 	return res.ObjectWithVector(additional.Vector), nil
 }
 
-type QueryInput struct {
-	Class      string
-	Offset     int
-	Limit      int
-	Filters    filters.LocalFilter
-	Sort       []filters.Sort
-	Additional additional.Properties
-}
-
 // GetObjects Class from the connected DB
 func (m *Manager) GetObjects(ctx context.Context, principal *models.Principal,
 	offset, limit *int64, sort, order *string, additional additional.Properties) ([]*models.Object, error) {
