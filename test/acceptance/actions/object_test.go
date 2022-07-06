@@ -724,7 +724,6 @@ func query(t *testing.T) {
 		cls          = "TestObjectHTTPQuery"
 		first_friend = "TestObjectHTTPQueryFriend"
 	)
-
 	// test setup
 	assertCreateObject(t, first_friend, map[string]interface{}{})
 	defer deleteClassObject(t, first_friend)
@@ -738,17 +737,38 @@ func query(t *testing.T) {
 			},
 		},
 	})
-	// tear down
 	defer deleteClassObject(t, cls)
 	assertCreateObject(t, cls, map[string]interface{}{"count": 1})
 	assertCreateObject(t, cls, map[string]interface{}{"count": 1})
-	listParams := objects.ObjectsListParams{
-		Class: &cls,
-	}
-	resp, err := helper.Client(t).Objects.ObjectsList(&listParams, nil)
-	require.Nil(t, err, "should not error", resp)
+
+	listParams := objects.NewObjectsListParams()
+	listParams.Class = &cls
+	resp, err := helper.Client(t).Objects.ObjectsList(listParams, nil)
+	require.Nil(t, err, "unexpected error", resp)
 
 	if n := len(resp.Payload.Objects); n != 2 {
 		t.Errorf("Number of object got:%v want %v", n, 2)
+	}
+	var count int64
+	for _, x := range resp.Payload.Objects {
+		if x.Class != cls {
+			t.Errorf("Class got:%v want:%v", x.Class, cls)
+		}
+		m, ok := x.Properties.(map[string]interface{})
+		if !ok {
+			t.Error("wrong property type")
+		}
+		n, _ := m["count"].(json.Number).Int64()
+		count += n
+	}
+	if count != 2 {
+		t.Errorf("Count got:%v want:%v", count, 2)
+	}
+
+	listParams.Class = &first_friend
+	resp, err = helper.Client(t).Objects.ObjectsList(listParams, nil)
+	require.Nil(t, err, "unexpected error", resp)
+	if n := len(resp.Payload.Objects); n != 1 {
+		t.Errorf("Number of friend objects got:%v want %v", n, 2)
 	}
 }

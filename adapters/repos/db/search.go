@@ -201,7 +201,7 @@ func (d *DB) Query(ctx context.Context, q *objects.QueryInput) (search.Results, 
 	if idx == nil {
 		return nil, &objects.Error{Msg: "class not found " + q.Class, Code: objects.StatusNotFound}
 	}
-	res, err := idx.objectSearch(ctx, totalLimit, &q.Filters, nil, q.Sort, q.Additional)
+	res, err := idx.objectSearch(ctx, totalLimit, q.Filters, nil, q.Sort, q.Additional)
 	if err != nil {
 		return nil, &objects.Error{Msg: "search index " + idx.ID(), Code: objects.StatusInternalServerError, Err: err}
 	}

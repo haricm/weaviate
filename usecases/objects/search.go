@@ -24,7 +24,7 @@ type QueryInput struct {
 	Class      string
 	Offset     int
 	Limit      int
-	Filters    filters.LocalFilter
+	Filters    *filters.LocalFilter
 	Sort       []filters.Sort
 	Additional additional.Properties
 }
