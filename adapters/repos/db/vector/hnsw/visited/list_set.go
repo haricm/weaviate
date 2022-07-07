@@ -19,7 +19,7 @@ type ListSet struct {
 	set []uint8
 }
 
-//  Len returns the length of 
+//  Len returns the number of elements in the list
 func (l ListSet) Len() uint64 { return uint64(len(l.set)) - 1 }
 
 // Free allocated slice. This list not resuable after this call

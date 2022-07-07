@@ -17,18 +17,18 @@ import (
 
 type Pool struct {
 	sync.Mutex
-	listSize int
-	lists    []ListSet
+	listSetSize int
+	listSets    []ListSet
 }
 
-func NewPool(poolSize int, listSize int) *Pool {
+func NewPool(size int, listSetSize int) *Pool {
 	p := &Pool{
-		listSize: listSize,
-		lists:    make([]ListSet, poolSize),
+		listSetSize: listSetSize,
+		listSets:    make([]ListSet, size, size+32), // make enough room
 	}
 
-	for i := 0; i < poolSize; i++ {
-		p.lists[i] = NewList(listSize)
+	for i := 0; i < size; i++ {
+		p.listSets[i] = NewList(listSetSize)
 	}
 
 	return p
@@ -38,34 +38,34 @@ func (p *Pool) Borrow() ListSet {
 	p.Lock()
 	defer p.Unlock()
 
-	if n := len(p.lists); n > 0 {
-		l := p.lists[n-1]
-		p.lists[n-1].Free() // prevent memory leak
-		p.lists = p.lists[:n-1]
+	if n := len(p.listSets); n > 0 {
+		l := p.listSets[n-1]
+		p.listSets[n-1].Free() // prevent memory leak
+		p.listSets = p.listSets[:n-1]
 		return l
 	}
 
-	return NewList(p.listSize)
+	return NewList(p.listSetSize)
 }
 
 func (p *Pool) Return(l ListSet) {
 	p.Lock()
 	defer p.Unlock()
 
-	if l.Len() != uint64(p.listSize) {
-		// // discard this list, it does not match our current criteria
-		// l = nil
-		return
+	if l.Len() > uint64(p.listSetSize)*3/2 { // 3/2 could be tuned
+		return // discard this list, it does not match our current criteria
 	}
 
 	l.Reset()
-	p.lists = append(p.lists, l)
+	p.listSets = append(p.listSets, l)
 }
 
 func (p *Pool) Destroy() {
-	for i := range p.lists {
-		p.lists[i].Free()
+	p.Lock()
+	defer p.Unlock()
+	for i := range p.listSets {
+		p.listSets[i].Free()
 	}
 
-	p.lists = nil
+	p.listSets = nil
 }
