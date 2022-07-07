@@ -33,7 +33,7 @@ func NewList(size int) *List {
 
 func (l *List) Visit(node uint64) {
 	if node >= l.size {
-		l.resize(node + 1000)
+		l.resize(node + 1024)
 	}
 
 	l.store[node] = l.version
@@ -56,17 +56,12 @@ func (l *List) resize(target uint64) {
 
 func (l *List) Reset() {
 	l.version++
-
-	if l.version == 0 {
-		// 0 is not a valid version because it conflicts with the initial value of
-		// the array
-		l.version = 1
-	}
-
 	// we have overflowed and need an actual reset
-	if l.version == 1 {
+	if l.version == 0 {
 		for i := range l.store {
 			l.store[i] = 0
 		}
+		l.version = 1
+
 	}
 }

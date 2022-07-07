@@ -38,9 +38,10 @@ func (p *Pool) Borrow() *List {
 	p.Lock()
 	defer p.Unlock()
 
-	if len(p.lists) > 0 {
-		l := p.lists[0]
-		p.lists = p.lists[1:]
+	if n := len(p.lists); n > 0 {
+		l := p.lists[n-1]
+		p.lists[n-1] = nil // prevent memory leak
+		p.lists = p.lists[:n-1]
 		return l
 	}
 
@@ -52,8 +53,8 @@ func (p *Pool) Return(l *List) {
 	defer p.Unlock()
 
 	if len(l.store) != p.listSize {
-		// discard this list, it does not match our current criteria
-		l = nil
+		// // discard this list, it does not match our current criteria
+		// l = nil
 		return
 	}
 
