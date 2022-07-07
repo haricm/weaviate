@@ -18,7 +18,6 @@ package visited
 type List struct {
 	store   []uint8
 	version uint8
-	size    uint64
 }
 
 func NewList(size int) *List {
@@ -27,12 +26,11 @@ func NewList(size int) *List {
 		// something to differentiate from that
 		version: 1,
 		store:   make([]uint8, size),
-		size:    uint64(size),
 	}
 }
 
 func (l *List) Visit(node uint64) {
-	if node >= l.size {
+	if node >= uint64(len(l.store)) {
 		l.resize(node + 1024)
 	}
 
@@ -40,28 +38,22 @@ func (l *List) Visit(node uint64) {
 }
 
 func (l *List) Visited(node uint64) bool {
-	if node >= l.size {
-		l.resize(node + 1000)
-	}
-
-	return l.store[node] == l.version
+	return node < uint64(len(l.store)) && l.store[node] == l.version
 }
 
 func (l *List) resize(target uint64) {
 	newStore := make([]uint8, target)
 	copy(newStore, l.store)
 	l.store = newStore
-	l.size = target
 }
 
+// Reset list only in case of an overflow.
 func (l *List) Reset() {
 	l.version++
-	// we have overflowed and need an actual reset
-	if l.version == 0 {
+	if l.version == 0 { // if overflowed
+		l.version = 1
 		for i := range l.store {
 			l.store[i] = 0
 		}
-		l.version = 1
-
 	}
 }
