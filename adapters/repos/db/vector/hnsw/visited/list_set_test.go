@@ -93,3 +93,24 @@ func TestVisitedList(t *testing.T) {
 		}
 	})
 }
+
+func TestListSetResize(t *testing.T) {
+	l := NewList(2)
+	assert.Equal(t, []uint8{1, 0, 0}, l.set)
+	assert.Equal(t, l.Len(), uint64(2))
+	l.Visit(1)
+	assert.Equal(t, []uint8{1, 0, 1}, l.set)
+	assert.Equal(t, l.Len(), uint64(2))
+	l.Reset()
+	assert.Equal(t, []uint8{2, 0, 1}, l.set)
+	assert.Equal(t, l.Len(), uint64(2))
+	l.Visit(1)
+	assert.Equal(t, []uint8{2, 0, 2}, l.set)
+	assert.Equal(t, l.Len(), uint64(2))
+	l.Visit(3)
+	assert.Equal(t, []uint8{2, 0, 2, 0, 2}, l.set[0:5])
+	assert.Equal(t, uint64(2+1024), l.Len())
+	l.Free()
+	assert.Equal(t, []uint8(nil), l.set)
+
+}
