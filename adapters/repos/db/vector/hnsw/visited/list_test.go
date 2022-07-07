@@ -63,7 +63,7 @@ func TestVisitedList(t *testing.T) {
 		}
 
 		// verify the test is correct and we are indeed at the version we think we are
-		assert.Equal(t, uint8(1), l.version)
+		assert.Equal(t, uint8(1), l.set[0])
 
 		// verify there are zero visited nodes
 		for i := uint64(0); i < 1000; i++ {
@@ -85,7 +85,7 @@ func TestVisitedList(t *testing.T) {
 		}
 
 		// verify the test is correct and we are indeed at the version we think we are
-		assert.Equal(t, l.version, uint8(1))
+		assert.Equal(t, l.set[0], uint8(1))
 
 		// verify there are zero visited nodes
 		for i := uint64(0); i < 1000; i++ {

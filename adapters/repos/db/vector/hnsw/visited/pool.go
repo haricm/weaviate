@@ -18,13 +18,13 @@ import (
 type Pool struct {
 	sync.Mutex
 	listSize int
-	lists    []*List
+	lists    []ListSet
 }
 
 func NewPool(poolSize int, listSize int) *Pool {
 	p := &Pool{
 		listSize: listSize,
-		lists:    make([]*List, poolSize),
+		lists:    make([]ListSet, poolSize),
 	}
 
 	for i := 0; i < poolSize; i++ {
@@ -34,13 +34,13 @@ func NewPool(poolSize int, listSize int) *Pool {
 	return p
 }
 
-func (p *Pool) Borrow() *List {
+func (p *Pool) Borrow() ListSet {
 	p.Lock()
 	defer p.Unlock()
 
 	if n := len(p.lists); n > 0 {
 		l := p.lists[n-1]
-		p.lists[n-1] = nil // prevent memory leak
+		p.lists[n-1].Free() // prevent memory leak
 		p.lists = p.lists[:n-1]
 		return l
 	}
@@ -48,11 +48,11 @@ func (p *Pool) Borrow() *List {
 	return NewList(p.listSize)
 }
 
-func (p *Pool) Return(l *List) {
+func (p *Pool) Return(l ListSet) {
 	p.Lock()
 	defer p.Unlock()
 
-	if len(l.store) != p.listSize {
+	if l.Len() != uint64(p.listSize) {
 		// // discard this list, it does not match our current criteria
 		// l = nil
 		return
@@ -64,7 +64,7 @@ func (p *Pool) Return(l *List) {
 
 func (p *Pool) Destroy() {
 	for i := range p.lists {
-		p.lists[i] = nil
+		p.lists[i].Free()
 	}
 
 	p.lists = nil

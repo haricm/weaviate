@@ -11,49 +11,53 @@
 
 package visited
 
-// List is a reusable list with very efficient resets. Inspired by the C++
+// ListSet is a reusable list with very efficient resets. Inspired by the C++
 // implementation in hnswlib it can be reset with zero memrory writes in the
 // array by moving the match target instead of altering the list. Only after a
 // version overflow do we need to actually reset
-type List struct {
-	store   []uint8
-	version uint8
+type ListSet struct {
+	set []uint8
 }
 
-func NewList(size int) *List {
-	return &List{
-		// start at 1 since the initial value of the list is already 0, so we need
-		// something to differentiate from that
-		version: 1,
-		store:   make([]uint8, size),
-	}
+//  Len returns the length of 
+func (l ListSet) Len() uint64 { return uint64(len(l.set)) - 1 }
+
+// Free allocated slice. This list not resuable after this call
+func (l *ListSet) Free() { l.set = nil }
+
+func NewList(size int) ListSet {
+	set := make([]uint8, size+1)
+	// start at 1 since the initial value of the list is already 0, so we need
+	// something to differentiate from that
+	set[0] = 1 // version
+	return ListSet{set: set}
 }
 
-func (l *List) Visit(node uint64) {
-	if node >= uint64(len(l.store)) {
+func (l *ListSet) Visit(node uint64) {
+	if node >= l.Len() {
 		l.resize(node + 1024)
 	}
 
-	l.store[node] = l.version
+	l.set[node+1] = l.set[0]
 }
 
-func (l *List) Visited(node uint64) bool {
-	return node < uint64(len(l.store)) && l.store[node] == l.version
+func (l *ListSet) Visited(node uint64) bool {
+	return node < l.Len() && l.set[node+1] == l.set[0]
 }
 
-func (l *List) resize(target uint64) {
+func (l *ListSet) resize(target uint64) {
 	newStore := make([]uint8, target)
-	copy(newStore, l.store)
-	l.store = newStore
+	copy(newStore, l.set)
+	l.set = newStore
 }
 
 // Reset list only in case of an overflow.
-func (l *List) Reset() {
-	l.version++
-	if l.version == 0 { // if overflowed
-		l.version = 1
-		for i := range l.store {
-			l.store[i] = 0
+func (l *ListSet) Reset() {
+	l.set[0]++
+	if l.set[0] == 0 { // if overflowed
+		for i := range l.set {
+			l.set[i] = 0
 		}
+		l.set[0] = 1
 	}
 }
