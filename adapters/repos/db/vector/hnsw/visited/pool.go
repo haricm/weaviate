@@ -52,7 +52,7 @@ func (p *Pool) Return(l ListSet) {
 	p.Lock()
 	defer p.Unlock()
 
-	if l.Len() > uint64(p.listSetSize)*5/4 { // 5/4 could be tuned
+	if l.Len() > p.listSetSize*5/4 { // 5/4 could be tuned
 		return // discard this list, it does not match our current criteria
 	}
 

@@ -13,7 +13,7 @@ func TestPool(t *testing.T) {
 
 	// get first list
 	l1 := pool.Borrow()
-	assert.Equal(t, uint64(2), l1.Len())
+	assert.Equal(t, 2, l1.Len())
 	assert.Equal(t, 1, len(pool.listSets))
 
 	// get second list

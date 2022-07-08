@@ -25,7 +25,7 @@ type ListSet struct {
 }
 
 //  Len returns the number of elements in the list.
-func (l ListSet) Len() uint64 { return uint64(len(l.set)) - 1 }
+func (l ListSet) Len() int { return len(l.set) - 1 }
 
 // Free allocated slice. This list should not be resuable after this call.
 func (l *ListSet) Free() { l.set = nil }
@@ -39,7 +39,7 @@ func NewList(size int) ListSet {
 
 // Visit sets element at node to the marker value
 func (l *ListSet) Visit(node uint64) {
-	if node >= l.Len() { // resize
+	if int(node) >= l.Len() { // resize
 		newset := make([]uint8, node+1024)
 		copy(newset, l.set)
 		l.set = newset
@@ -49,7 +49,7 @@ func (l *ListSet) Visit(node uint64) {
 
 // Visited checks if l contains the specified node
 func (l *ListSet) Visited(node uint64) bool {
-	return node < l.Len() && l.set[node+1] == l.set[0]
+	return int(node) < l.Len() && l.set[node+1] == l.set[0]
 }
 
 // Reset list only in case of an overflow.
