@@ -21,6 +21,8 @@ type Pool struct {
 	listSets    []ListSet
 }
 
+// NewPool creates a new pool with specified size.
+// listSetSize specifies the size of a list at creation time point
 func NewPool(size int, listSetSize int) *Pool {
 	p := &Pool{
 		listSetSize: listSetSize,
@@ -34,6 +36,7 @@ func NewPool(size int, listSetSize int) *Pool {
 	return p
 }
 
+// Borrow return a free list
 func (p *Pool) Borrow() ListSet {
 	p.Lock()
 	defer p.Unlock()
@@ -48,6 +51,8 @@ func (p *Pool) Borrow() ListSet {
 	return NewList(p.listSetSize)
 }
 
+// Return list l to the pool
+// The list l might be thrown if l.Len() > listSetSize*1.25
 func (p *Pool) Return(l ListSet) {
 	p.Lock()
 	defer p.Unlock()
@@ -60,6 +65,7 @@ func (p *Pool) Return(l ListSet) {
 	p.listSets = append(p.listSets, l)
 }
 
+// Destory and empty pool
 func (p *Pool) Destroy() {
 	p.Lock()
 	defer p.Unlock()

@@ -40,7 +40,7 @@ func NewList(size int) ListSet {
 // Visit sets element at node to the marker value
 func (l *ListSet) Visit(node uint64) {
 	if int(node) >= l.Len() { // resize
-		newset := make([]uint8, node+1024)
+		newset := make([]uint8, growth(len(l.set), int(node)+1024))
 		copy(newset, l.set)
 		l.set = newset
 	}
@@ -61,4 +61,29 @@ func (l *ListSet) Reset() {
 		}
 		l.set[0] = 1 // restart counting
 	}
+}
+
+// barrier let us double the size if the old size is below it
+const barrier = 4096
+
+// growth calculates the amount a list should grow in a smooth way.
+func growth(oldsize, size int) int {
+	doublesize := oldsize << 1
+	if size > doublesize {
+		return size
+	}
+	if oldsize < barrier {
+		return doublesize
+	}
+	// detect overflow newsize > 0
+	// and prevent an infinite loop.
+	newsize := oldsize
+	for newsize > 0 && newsize < size {
+		newsize += newsize >> 2
+	}
+	// return requested size in case of overflow
+	if newsize <= 0 {
+		newsize = size
+	}
+	return newsize
 }

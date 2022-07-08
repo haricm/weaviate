@@ -12,6 +12,7 @@
 package visited
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -112,5 +113,25 @@ func TestListSetResize(t *testing.T) {
 	assert.Equal(t, (2 + 1024), l.Len())
 	l.Free()
 	assert.Equal(t, []uint8(nil), l.set)
+}
 
+func TestGrowth(t *testing.T) {
+	tests := []struct {
+		old  int
+		new  int
+		want int
+	}{
+		{512, 1000, 1024},
+		{1024, 1048, 2048},
+		{2000, 3500, 4000},
+		{barrier, barrier + 32, barrier + barrier/4},
+		{barrier, math.MaxInt, math.MaxInt},
+		{math.MaxInt / 2, math.MaxInt - 1, math.MaxInt - 1},
+	}
+	for _, tc := range tests {
+		got := growth(tc.old, tc.new)
+		if got != tc.want {
+			t.Errorf("growth(%d,%d) got:%d want:%d", tc.old, tc.new, got, tc.want)
+		}
+	}
 }
