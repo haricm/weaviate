@@ -52,12 +52,12 @@ func (p *Pool) Borrow() ListSet {
 }
 
 // Return list l to the pool
-// The list l might be thrown if l.Len() > listSetSize*1.25
+// The list l might be thrown if l.Len() > listSetSize*1.10
 func (p *Pool) Return(l ListSet) {
 	p.Lock()
 	defer p.Unlock()
 
-	if l.Len() > p.listSetSize*5/4 { // 5/4 could be tuned
+	if n := l.Len(); n < p.listSetSize || n > p.listSetSize*11/10 { // 11/10 could be tuned
 		return // discard this list, it does not match our current criteria
 	}
 
