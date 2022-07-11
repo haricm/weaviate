@@ -213,7 +213,7 @@ func (sg *SegmentGroup) replaceCompactedSegments(old1, old2 int,
 	sg.segments[old1] = nil
 	sg.segments[old2] = nil
 
-	// the old segments have been deletd, we can now safely remove the .tmp
+	// the old segments have been deleted, we can now safely remove the .tmp
 	// extension from the new segment which carried the name of the second old
 	// segment
 	newPath, err := sg.stripTmpExtension(newPathTmp)
