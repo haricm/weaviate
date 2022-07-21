@@ -17,7 +17,7 @@ import (
 	"testing"
 
 	"github.com/semi-technologies/weaviate/client/objects"
-	"github.com/semi-technologies/weaviate/test/acceptance/helper"
+	"github.com/semi-technologies/weaviate/test/helper"
 )
 
 func removingObjects(t *testing.T) {

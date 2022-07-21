@@ -37,7 +37,7 @@ case $CONFIG in
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED=true \
       DEFAULT_VECTORIZER_MODULE=text2vec-contextionary \
       STORAGE_FS_SNAPSHOTS_PATH="${PWD}/snapshots" \
-      ENABLE_MODULES="text2vec-contextionary,storage-filesystem" \
+      ENABLE_MODULES="text2vec-contextionary,storage-filesystem,storage-filesystem" \
       CLUSTER_HOSTNAME="node1" \
       CLUSTER_GOSSIP_BIND_PORT="7100" \
       CLUSTER_DATA_BIND_PORT="7101" \
