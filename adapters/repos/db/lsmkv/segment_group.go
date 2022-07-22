@@ -298,8 +298,9 @@ func (sg *SegmentGroup) shutdown(ctx context.Context) error {
 	compactionHalted := make(chan struct{})
 
 	go func() {
-		sg.compactionCycle.Stop(ctx)
-		compactionHalted <- struct{}{}
+		if sg.compactionCycle.TryStop(ctx) {
+			compactionHalted <- struct{}{}
+		}
 	}()
 
 	select {

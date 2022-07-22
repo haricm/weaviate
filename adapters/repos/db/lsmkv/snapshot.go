@@ -23,15 +23,13 @@ func (b *Bucket) PauseCompaction(ctx context.Context) error {
 	compactionHalted := make(chan struct{})
 
 	go func() {
-		b.disk.compactionCycle.Stop(ctx)
-		compactionHalted <- struct{}{}
+		if b.disk.compactionCycle.TryStop(ctx) {
+			compactionHalted <- struct{}{}
+		}
 	}()
 
 	select {
 	case <-ctx.Done():
-		// resume the compaction cycle, as the
-		// context deadline was exceeded
-		defer b.disk.compactionCycle.Start(cyclemanager.DefaultLSMCompactionInterval)
 		return errors.Wrap(ctx.Err(), "long-running compaction in progress")
 	case <-compactionHalted:
 		return nil
@@ -52,19 +50,19 @@ func (b *Bucket) FlushMemtable(ctx context.Context) error {
 		return errors.Wrap(storagestate.ErrStatusReadOnly, "flush memtable")
 	}
 
-	defer b.flushCycle.Start(cyclemanager.DefaultMemtableFlushInterval)
-
-	flushed := make(chan struct{})
+	flushHalted := make(chan struct{})
 
 	go func() {
-		b.flushCycle.Stop(ctx)
-		flushed <- struct{}{}
+		if b.flushCycle.TryStop(ctx) {
+			flushHalted <- struct{}{}
+		}
 	}()
 
 	select {
 	case <-ctx.Done():
 		return errors.Wrap(ctx.Err(), "long-running memtable flush in progress")
-	case <-flushed:
+	case <-flushHalted:
+		defer b.flushCycle.Start(cyclemanager.DefaultMemtableFlushInterval)
 		// this lock does not currently _need_ to be
 		// obtained, as the only other place that
 		// grabs this lock is the flush cycle, which
@@ -74,7 +72,6 @@ func (b *Bucket) FlushMemtable(ctx context.Context) error {
 		// as flushLock may be added elsewhere in the
 		// future
 		b.flushLock.Lock()
-
 		if b.active == nil && b.flushing == nil {
 			b.flushLock.Unlock()
 			return nil

@@ -12,6 +12,7 @@
 package lsmkv
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os"
@@ -254,15 +255,24 @@ func (sg *SegmentGroup) initCompactionCycle(interval time.Duration) {
 	}
 
 	go func() {
-		t := time.Tick(interval)
+		t := time.NewTicker(interval)
+		defer t.Stop()
+
+		var ctx context.Context
 		for {
 			select {
-			case <-sg.compactionCycle.Stopped:
-				sg.logger.WithField("action", "lsm_compaction_stop_cycle").
-					WithField("path", sg.dir).
-					Debug("stop compaction cycle")
-				return
-			case <-t:
+			case ctx = <-sg.compactionCycle.Stop:
+				if ctx.Err() == nil {
+					sg.logger.WithField("action", "lsm_compaction_stop_cycle").
+						WithField("path", sg.dir).
+						Debug("stop compaction cycle")
+					return
+				} else {
+					sg.logger.WithField("action", "lsm_compaction_stop_cycle").
+						WithField("path", sg.dir).
+						Debug("stop compaction cycle cancelled")
+				}
+			case <-t.C:
 				sg.monitorSegments()
 
 				if sg.eligibleForCompaction() {

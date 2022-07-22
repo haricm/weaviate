@@ -459,8 +459,9 @@ func (b *Bucket) Shutdown(ctx context.Context) error {
 	flushHalted := make(chan struct{})
 
 	go func() {
-		b.flushCycle.Stop(ctx)
-		flushHalted <- struct{}{}
+		if b.flushCycle.TryStop(ctx) {
+			flushHalted <- struct{}{}
+		}
 	}()
 
 	select {
@@ -497,12 +498,17 @@ func (b *Bucket) Shutdown(ctx context.Context) error {
 
 func (b *Bucket) initFlushCycle(interval time.Duration) {
 	go func() {
-		t := time.Tick(interval)
+		t := time.NewTicker(interval)
+		defer t.Stop()
+
+		var ctx context.Context
 		for {
 			select {
-			case <-b.flushCycle.Stopped:
-				return
-			case <-t:
+			case ctx = <-b.flushCycle.Stop:
+				if ctx.Err() == nil {
+					return
+				}
+			case <-t.C:
 				b.flushLock.Lock()
 
 				// to check the current size of the WAL to
