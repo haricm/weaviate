@@ -2,7 +2,6 @@ package cyclemanager
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -123,20 +122,15 @@ func (s *sleeper) sleep(interval time.Duration) {
 
 		var ctx context.Context
 		for {
-			fmt.Printf("  ==> sleep: loop started\n")
 			select {
 			case ctx = <-s.sleepCycle.Stop:
-				fmt.Printf("  ==> sleep: stop read\n")
 				if (ctx.Err() == nil) {
-					fmt.Printf("  ==> sleep: stopping\n")
 					close(s.dreams)
 					return
 				}
 			case <-t.C:
-				fmt.Printf("  ==> sleep: pushing to channel\n")
 				time.Sleep(s.cycleDuration)
 				s.dreams <- "something wonderful..."
-				fmt.Printf("  ==> sleep: pushed to channel\n")
 			}
 		}
 	}()
