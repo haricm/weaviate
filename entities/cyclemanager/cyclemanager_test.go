@@ -1,155 +1,137 @@
 package cyclemanager
 
-import (
-	"context"
-	"fmt"
-	"testing"
-	"time"
+// import (
+// 	"context"
+// 	"testing"
+// 	"time"
 
-	"github.com/stretchr/testify/assert"
-)
+// 	"github.com/stretchr/testify/assert"
+// )
 
-func TestCycleManager(t *testing.T) {
-	sleeper := sleeper{
-		dreams: make(chan string, 1),
-	}
+// func TestCycleManager(t *testing.T) {
+// 	cycleInterval := 10 * time.Millisecond
+// 	cycleDuration := 5 * time.Millisecond
+// 	stopTimeout := 25 * time.Millisecond
 
-	t.Run("create new", func(t *testing.T) {
-		description := "test cycle"
-		sleeper.sleepCycle = New(sleeper.sleep, description)
+// 	sleeper := sleeper{
+// 		dreams: make(chan string, 1),
+// 		cycleDuration: cycleDuration,
+// 	}
 
-		assert.False(t, sleeper.sleepCycle.running)
-		assert.Equal(t, sleeper.sleepCycle.description, description)
-		assert.NotNil(t, sleeper.sleepCycle.cycleFunc)
-		assert.NotNil(t, sleeper.sleepCycle.Stopped)
-	})
+// 	t.Run("create new", func(t *testing.T) {
+// 		description := "test cycle"
+// 		sleeper.sleepCycle = New(sleeper.sleep, description)
 
-	t.Run("start", func(t *testing.T) {
-		sleeper.sleepCycle.Start(100 * time.Millisecond)
-		assert.True(t, sleeper.sleepCycle.running)
-		assert.Equal(t, "something wonderful...", <-sleeper.dreams)
-	})
+// 		assert.False(t, sleeper.sleepCycle.Running())
+// 		assert.Equal(t, sleeper.sleepCycle.description, description)
+// 		assert.NotNil(t, sleeper.sleepCycle.cycleFunc)
+// 		assert.NotNil(t, sleeper.sleepCycle.Stop)
+// 	})
 
-	t.Run("stop", func(t *testing.T) {
-		timeoutCtx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
-		defer cancel()
+// 	t.Run("start", func(t *testing.T) {
+// 		sleeper.sleepCycle.Start(cycleInterval)
+// 		assert.True(t, sleeper.sleepCycle.Running())
+// 		assert.Equal(t, "something wonderful...", <-sleeper.dreams)
+// 	})
 
-		stopped := make(chan struct{})
+// 	t.Run("stop", func(t *testing.T) {
+// 		timeoutCtx, cancel := context.WithTimeout(context.Background(), stopTimeout)
+// 		defer cancel()
 
-		go func() {
-			sleeper.sleepCycle.Stop(timeoutCtx)
-			stopped <- struct{}{}
-		}()
+// 		stopped := make(chan struct{})
 
-		select {
-		case <-timeoutCtx.Done():
-			t.Fatal(timeoutCtx.Err().Error(), "failed to stop sleeper")
-		case <-stopped:
-		}
+// 		go func() {
+// 			if sleeper.sleepCycle.TryStop(timeoutCtx) {
+// 				stopped <- struct{}{}
+// 			}
+// 		}()
 
-		assert.False(t, sleeper.sleepCycle.running)
-		assert.Empty(t, <-sleeper.dreams)
-	})
-}
+// 		select {
+// 		case <-timeoutCtx.Done():
+// 			t.Fatal(timeoutCtx.Err().Error(), "failed to stop sleeper")
+// 		case <-stopped:
+// 		}
 
-func TestCycleManager_CancelContext(t *testing.T) {
-	sleeper := sleeper{
-		dreams: make(chan string, 1),
-	}
+// 		assert.False(t, sleeper.sleepCycle.Running())
+// 		assert.Empty(t, <-sleeper.dreams)
+// 	})
+// }
 
-	cycleInterval := 100 * time.Millisecond
+// func TestCycleManager_CancelContext(t *testing.T) {
+// 	cycleInterval := 10 * time.Millisecond
+// 	cycleDuration := 50 * time.Millisecond
+// 	stopTimeout := 25 * time.Millisecond
 
-	t.Run("create new", func(t *testing.T) {
-		description := "test cycle"
-		sleeper.sleepCycle = New(sleeper.sleepDelayedWakeup, description)
+// 	sleeper := sleeper{
+// 		dreams: make(chan string, 1),
+// 		cycleDuration: cycleDuration,
+// 	}
 
-		assert.False(t, sleeper.sleepCycle.running)
-		assert.Equal(t, sleeper.sleepCycle.description, description)
-		assert.NotNil(t, sleeper.sleepCycle.cycleFunc)
-		assert.NotNil(t, sleeper.sleepCycle.Stopped)
-	})
+// 	t.Run("create new", func(t *testing.T) {
+// 		description := "test cycle"
+// 		sleeper.sleepCycle = New(sleeper.sleep, description)
 
-	t.Run("start", func(t *testing.T) {
-		sleeper.sleepCycle.Start(cycleInterval)
-		assert.True(t, sleeper.sleepCycle.running)
-		assert.Equal(t, "something wonderful...", <-sleeper.dreams)
-	})
+// 		assert.False(t, sleeper.sleepCycle.Running())
+// 		assert.Equal(t, sleeper.sleepCycle.description, description)
+// 		assert.NotNil(t, sleeper.sleepCycle.cycleFunc)
+// 		assert.NotNil(t, sleeper.sleepCycle.Stop)
+// 	})
 
-	t.Run("cancel early", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Nanosecond)
-		defer cancel()
+// 	t.Run("start", func(t *testing.T) {
+// 		sleeper.sleepCycle.Start(cycleInterval)
+// 		assert.True(t, sleeper.sleepCycle.Running())
+// 		assert.Equal(t, "something wonderful...", <-sleeper.dreams)
+// 	})
 
-		awake := make(chan struct{})
+// 	t.Run("cancel early", func(t *testing.T) {
+// 		ctx, cancel := context.WithTimeout(context.Background(), stopTimeout)
+// 		defer cancel()
 
-		go func() {
-			sleeper.sleepCycle.Stop(ctx)
-			awake <- struct{}{}
-		}()
+// 		awake := make(chan struct{})
 
-		select {
-		case <-ctx.Done():
-			done := make(chan struct{})
+// 		go func() {
+// 			if sleeper.sleepCycle.TryStop(ctx) {
+// 				awake <- struct{}{}
+// 			}
+// 		}()
 
-			// if it takes longer than a second to restart
-			// the cycle, that means that `Stop` still has
-			// the lock obtained, and Start must wait.
-			//
-			// failure here will be obvious, because `Stop`
-			// here is configured to block for well beyond
-			// one second.
-			go failIfTimeout(done, time.Second)
+// 		select {
+// 		case <-ctx.Done():
+// 		case <-awake:
+// 			t.Fatal("context should have been cancelled")
+// 		}
 
-			sleeper.sleepCycle.Start(cycleInterval)
-			done <- struct{}{}
-		case <-awake:
-			t.Fatal("context should have been cancelled")
-		}
-	})
-}
+// 		assert.True(t, sleeper.sleepCycle.Running())
+// 		assert.Equal(t, "something wonderful...", <-sleeper.dreams)
+// 		//make sure cycle was not stopped
+// 		time.Sleep(2*cycleDuration)
+// 		assert.True(t, sleeper.sleepCycle.Running())
+// 	})
+// }
 
-type sleeper struct {
-	sleepCycle *CycleManager
-	dreams     chan string
-}
+// type sleeper struct {
+// 	sleepCycle *CycleManager
+// 	dreams     chan string
+// 	cycleDuration time.Duration
+// }
 
-func (s *sleeper) sleep(interval time.Duration) {
-	go func() {
-		t := time.Tick(interval)
-		for {
-			select {
-			case <-s.sleepCycle.Stopped:
-				close(s.dreams)
-				return
-			case <-t:
-				s.dreams <- "something wonderful..."
-			}
-		}
-	}()
-}
+// func (s *sleeper) sleep(interval time.Duration) {
+// 	go func() {
+// 		t := time.NewTicker(interval)
+// 		defer t.Stop()
 
-func (s *sleeper) sleepDelayedWakeup(interval time.Duration) {
-	go func() {
-		t := time.Tick(interval)
-		for {
-			select {
-			case <-s.sleepCycle.Stopped:
-				// simulate a blocking channel receive
-				fmt.Println("about to sleep for 24 hours")
-				time.Sleep(24 * time.Hour)
-				fmt.Println("done sleeping")
-				return
-			case <-t:
-				s.dreams <- "something wonderful..."
-			}
-		}
-	}()
-}
-
-func failIfTimeout(done chan struct{}, d time.Duration) {
-	select {
-	case <-done:
-		return
-	case <-time.After(d):
-		panic("test timed out")
-	}
-}
+// 		var ctx context.Context
+// 		for {
+// 			select {
+// 			case ctx = <-s.sleepCycle.Stop:
+// 				if (ctx.Err() == nil) {
+// 					close(s.dreams)
+// 					return
+// 				}
+// 			case <-t.C:
+// 				time.Sleep(s.cycleDuration)
+// 				s.dreams <- "something wonderful..."
+// 			}
+// 		}
+// 	}()
+// }

@@ -13,14 +13,14 @@ type CycleManager struct {
 	running     bool
 	cycleFunc   func(duration time.Duration)
 
-	Stopped chan struct{}
+	Stop chan context.Context
 }
 
 func New(cycleFunc func(duration time.Duration), description string) *CycleManager {
 	return &CycleManager{
 		description: description,
 		cycleFunc:   cycleFunc,
-		Stopped:     make(chan struct{}),
+		Stop:        make(chan context.Context),
 	}
 }
 
@@ -37,14 +37,23 @@ func (c *CycleManager) Start(interval time.Duration) {
 	c.running = true
 }
 
-func (c *CycleManager) Stop(ctx context.Context) {
+func (c *CycleManager) TryStop(ctx context.Context) (stopped bool) {
 	c.Lock()
 	defer c.Unlock()
 
 	if !c.running {
-		return
+		return true
 	}
 
-	c.Stopped <- struct{}{}
-	c.running = false
+	c.Stop <- ctx
+	stopped = ctx.Err() == nil
+	c.running = !stopped
+	return stopped
+}
+
+func (c *CycleManager) Running() bool {
+	c.RLock()
+	defer c.RUnlock()
+
+	return c.running
 }

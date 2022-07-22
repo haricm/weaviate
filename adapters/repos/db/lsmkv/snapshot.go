@@ -2,11 +2,11 @@ package lsmkv
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/semi-technologies/weaviate/entities/cyclemanager"
 	"github.com/semi-technologies/weaviate/entities/storagestate"
 )
 
@@ -20,20 +20,18 @@ import (
 // to fail the backup attempt and retry later, than to block
 // indefinitely.
 func (b *Bucket) PauseCompaction(ctx context.Context) error {
-	compactionHalted := make(chan struct{})
-
-	go func() {
-		b.disk.compactionCycle.Stop(ctx)
-		compactionHalted <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
-		// resume the compaction cycle, as the
-		// context deadline was exceeded
-		defer b.disk.compactionCycle.Start(cyclemanager.DefaultLSMCompactionInterval)
 		return errors.Wrap(ctx.Err(), "long-running compaction in progress")
-	case <-compactionHalted:
+	case stopped := <-b.disk.compactionCycle.TryStop(ctx):
+		select {
+		case <-ctx.Done():
+			return errors.Wrap(ctx.Err(), "long-running compaction in progress")
+		default:
+			if !stopped {
+				return fmt.Errorf("failed to pause compaction")
+			}
+		}
 		return nil
 	}
 }
@@ -52,19 +50,19 @@ func (b *Bucket) FlushMemtable(ctx context.Context) error {
 		return errors.Wrap(storagestate.ErrStatusReadOnly, "flush memtable")
 	}
 
-	defer b.flushCycle.Start(cyclemanager.DefaultMemtableFlushInterval)
-
-	flushed := make(chan struct{})
-
-	go func() {
-		b.flushCycle.Stop(ctx)
-		flushed <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
 		return errors.Wrap(ctx.Err(), "long-running memtable flush in progress")
-	case <-flushed:
+	case stopped := <-b.flushCycle.TryStop(ctx):
+		select {
+		case <-ctx.Done():
+			return errors.Wrap(ctx.Err(), "long-running memtable flush in progress")
+		default:
+			if !stopped {
+				return fmt.Errorf("failed to flash memtable")
+			}
+		}
+		defer b.flushCycle.Start()
 		// this lock does not currently _need_ to be
 		// obtained, as the only other place that
 		// grabs this lock is the flush cycle, which
@@ -74,7 +72,6 @@ func (b *Bucket) FlushMemtable(ctx context.Context) error {
 		// as flushLock may be added elsewhere in the
 		// future
 		b.flushLock.Lock()
-
 		if b.active == nil && b.flushing == nil {
 			b.flushLock.Unlock()
 			return nil
@@ -111,6 +108,6 @@ func (b *Bucket) ListFiles(ctx context.Context) ([]string, error) {
 // ResumeCompaction starts the compaction cycle again.
 // It errors if compactions were not paused
 func (b *Bucket) ResumeCompaction(ctx context.Context) error {
-	b.disk.compactionCycle.Start(cyclemanager.DefaultLSMCompactionInterval)
+	b.disk.compactionCycle.Start()
 	return nil
 }
