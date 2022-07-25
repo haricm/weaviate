@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/semi-technologies/weaviate/entities/cyclemanager"
 	"github.com/semi-technologies/weaviate/entities/storagestate"
 )
 
@@ -20,18 +19,13 @@ import (
 // to fail the backup attempt and retry later, than to block
 // indefinitely.
 func (b *Bucket) PauseCompaction(ctx context.Context) error {
-	compactionHalted := make(chan struct{})
-
-	go func() {
-		if b.disk.compactionCycle.TryStop(ctx) {
-			compactionHalted <- struct{}{}
-		}
-	}()
-
 	select {
 	case <-ctx.Done():
 		return errors.Wrap(ctx.Err(), "long-running compaction in progress")
-	case <-compactionHalted:
+	case stopped := <-b.disk.compactionCycle.TryStop(ctx):
+		if !stopped {
+			errors.Wrap(ctx.Err(), "failed to pause compaction")
+		}
 		return nil
 	}
 }
@@ -50,19 +44,14 @@ func (b *Bucket) FlushMemtable(ctx context.Context) error {
 		return errors.Wrap(storagestate.ErrStatusReadOnly, "flush memtable")
 	}
 
-	flushHalted := make(chan struct{})
-
-	go func() {
-		if b.flushCycle.TryStop(ctx) {
-			flushHalted <- struct{}{}
-		}
-	}()
-
 	select {
 	case <-ctx.Done():
 		return errors.Wrap(ctx.Err(), "long-running memtable flush in progress")
-	case <-flushHalted:
-		defer b.flushCycle.Start(cyclemanager.DefaultMemtableFlushInterval)
+	case stopped := <-b.flushCycle.TryStop(ctx):
+		if !stopped {
+			return errors.Wrap(ctx.Err(), "failed to flash memtable")
+		}
+		defer b.flushCycle.Start()
 		// this lock does not currently _need_ to be
 		// obtained, as the only other place that
 		// grabs this lock is the flush cycle, which
@@ -108,6 +97,6 @@ func (b *Bucket) ListFiles(ctx context.Context) ([]string, error) {
 // ResumeCompaction starts the compaction cycle again.
 // It errors if compactions were not paused
 func (b *Bucket) ResumeCompaction(ctx context.Context) error {
-	b.disk.compactionCycle.Start(cyclemanager.DefaultLSMCompactionInterval)
+	b.disk.compactionCycle.Start()
 	return nil
 }

@@ -20,7 +20,7 @@ type CycleManager2 struct {
 
 type stopSignal struct {
 	contexts []context.Context
-	stopped chan bool
+	stopResult chan bool
 }
 
 func New2(cycleInterval time.Duration, cycleFunc CycleFunc) *CycleManager2 {
@@ -57,11 +57,11 @@ func (c *CycleManager2) Start() {
 			c.running = false
 			c.Unlock()
 
-			sig.stopped <- true
+			sig.stopResult <- true
 			fmt.Printf("   ==> loop: signal end (stopped)\n")
 			return false
 		}
-		sig.stopped <- false
+		sig.stopResult <- false
 		fmt.Printf("   ==> loop: signal end (cancelled)\n")
 
 		return true
@@ -104,16 +104,16 @@ func (c *CycleManager2) Start() {
 	fmt.Printf("   ==> Start: finish\n")
 }
 
-func (c * CycleManager2) TryStop(ctx context.Context) (stopped chan bool) {
+func (c * CycleManager2) TryStop(ctx context.Context) (stopResult chan bool) {
 	fmt.Printf("   ==> TryStop: beginning\n")
 	c.Lock()
 	fmt.Printf("   ==> TryStop: lock acquired\n")
 	defer c.Unlock()
 
-	stopped = make(chan bool, 1)
+	stopResult = make(chan bool, 1)
 	if !c.running {
-		stopped <- true
-		return stopped
+		stopResult <- true
+		return stopResult
 	}
 
 	select {
@@ -124,17 +124,17 @@ func (c * CycleManager2) TryStop(ctx context.Context) (stopped chan bool) {
 		c.stop <- &stopSignal{append(prevSignal.contexts, ctx), commonStopped}
 		go func() {
 			cs := <- commonStopped
-			prevSignal.stopped <- cs
-			stopped <- cs
+			prevSignal.stopResult <- cs
+			stopResult <- cs
 		}()
 	default:
 		fmt.Printf("   ==> TryStop: default\n")
-		c.stop <- &stopSignal{[]context.Context{ctx}, stopped}
+		c.stop <- &stopSignal{[]context.Context{ctx}, stopResult}
 		fmt.Printf("   ==> TryStop: default2\n")
 	}
 
 	fmt.Printf("   ==> TryStop: finish\n")
-	return stopped
+	return stopResult
 }
 
 func (c *CycleManager2) Running() bool {

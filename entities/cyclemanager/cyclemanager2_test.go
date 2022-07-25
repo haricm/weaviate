@@ -40,16 +40,16 @@ func TestCycleManager2(t *testing.T) {
 		timeoutCtx, cancel := context.WithTimeout(context.Background(), stopTimeout)
 		defer cancel()
 
-		stopped := cm.TryStop(timeoutCtx)
-		fmt.Printf("   ==> test/after trystop [%+v]\n", stopped)
+		stopResult := cm.TryStop(timeoutCtx)
+		fmt.Printf("   ==> test/after trystop [%+v]\n", stopResult)
 
 		select {
 		case <-timeoutCtx.Done():
 			fmt.Printf("   ==> timeout\n")
 			t.Fatal(timeoutCtx.Err().Error(), "failed to stop")
-		case stopResult := <-stopped:
+		case stopped := <-stopResult:
 			fmt.Printf("   ==> stopResult\n")
-			assert.True(t, stopResult)
+			assert.True(t, stopped)
 			assert.False(t, cm.Running())
 			assert.Empty(t, results)
 		}
@@ -79,27 +79,27 @@ func TestCycleManager2_timeout(t *testing.T) {
 	
 		// wait for 1st cycle to start
 		time.Sleep(cycleInterval + 1 * time.Millisecond)
-		stopped := cm.TryStop(timeoutCtx)
-		fmt.Printf("   ==> test/after trystop [%+v]\n", stopped)
+		stopResult := cm.TryStop(timeoutCtx)
+		fmt.Printf("   ==> test/after trystop [%+v]\n", stopResult)
 
 		select {
 		case <-timeoutCtx.Done():
 			fmt.Printf("   ==> timeout\n")
 			assert.True(t, cm.Running())
-		case <-stopped:
+		case <-stopResult:
 			t.Fatal("stopped before timeout")
 		}
 		fmt.Printf("   ==> after select\n")
 
 		// make sure it is still running
-		assert.False(t, <-stopped)
+		assert.False(t, <-stopResult)
 		assert.True(t, cm.Running())
 		assert.Equal(t, "something wonderful...", <-results)
 	})
 
 	t.Run("stop", func(t *testing.T) {
-		stopped := cm.TryStop(context.Background())
-		assert.True(t, <-stopped)
+		stopResult := cm.TryStop(context.Background())
+		assert.True(t, <-stopResult)
 		assert.False(t, cm.Running())
 	})
 
@@ -125,9 +125,9 @@ func TestCycleManager2_doesNotStartMultipleTimes(t *testing.T) {
 
 		// wait for 1st cycle to start
 		time.Sleep(cycleInterval + 1 * time.Millisecond)
-		stopped := cm.TryStop(context.Background())
+		stopResult := cm.TryStop(context.Background())
 
-		assert.True(t, <-stopped)
+		assert.True(t, <-stopResult)
 		assert.False(t, cm.Running())
 		// just one result produced
 		assert.Equal(t, 1, len(results))
@@ -151,13 +151,13 @@ func TestCycleManager2_handlesMultipleStops(t *testing.T) {
 
 		// wait for 1st cycle to start
 		time.Sleep(cycleInterval + 1 * time.Millisecond)
-		stopped := make([]chan bool, stopCount)
+		stopResult := make([]chan bool, stopCount)
 		for i := 0; i < stopCount; i++ {
-			stopped[i] = cm.TryStop(context.Background())
+			stopResult[i] = cm.TryStop(context.Background())
 		}
 		
 		for i := 0; i < stopCount; i++ {
-			assert.True(t, <-stopped[i])
+			assert.True(t, <-stopResult[i])
 		}
 
 		assert.False(t, cm.Running())
@@ -187,14 +187,14 @@ func TestCycleManager2_stopsIfNotAllContextsAreCancelled(t *testing.T) {
 		// wait for 1st cycle to start
 		time.Sleep(cycleInterval + 1 * time.Millisecond)
 
-		stopped1 := cm.TryStop(timeout1Ctx)
-		stopped2 := cm.TryStop(timeout2Ctx)
-		stopped3 := cm.TryStop(context.Background())
+		stopResult1 := cm.TryStop(timeout1Ctx)
+		stopResult2 := cm.TryStop(timeout2Ctx)
+		stopResult3 := cm.TryStop(context.Background())
 
 		// all produce the same result: cycle was stopped
-		assert.True(t, <-stopped1)
-		assert.True(t, <-stopped2)
-		assert.True(t, <-stopped3)
+		assert.True(t, <-stopResult1)
+		assert.True(t, <-stopResult2)
+		assert.True(t, <-stopResult3)
 
 		assert.False(t, cm.Running())
 		assert.Equal(t, "something wonderful...", <-results)
@@ -225,22 +225,22 @@ func TestCycleManager2_doesNotStopIfAllContextsAreCancelled(t *testing.T) {
 		// wait for 1st cycle to start
 		time.Sleep(cycleInterval + 1 * time.Millisecond)
 
-		stopped1 := cm.TryStop(timeout1Ctx)
-		stopped2 := cm.TryStop(timeout2Ctx)
-		stopped3 := cm.TryStop(timeout3Ctx)
+		stopResult1 := cm.TryStop(timeout1Ctx)
+		stopResult2 := cm.TryStop(timeout2Ctx)
+		stopResult3 := cm.TryStop(timeout3Ctx)
 
 		// all produce the same result: cycle was stopped
-		assert.False(t, <-stopped1)
-		assert.False(t, <-stopped2)
-		assert.False(t, <-stopped3)
+		assert.False(t, <-stopResult1)
+		assert.False(t, <-stopResult2)
+		assert.False(t, <-stopResult3)
 
 		assert.True(t, cm.Running())
 		assert.Equal(t, "something wonderful...", <-results)
 	})
 
 	t.Run("stop", func(t *testing.T) {
-		stopped := cm.TryStop(context.Background())
-		assert.True(t, <-stopped)
+		stopResult := cm.TryStop(context.Background())
+		assert.True(t, <-stopResult)
 		assert.False(t, cm.Running())
 	})
 }

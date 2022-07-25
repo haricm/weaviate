@@ -12,12 +12,10 @@
 package lsmkv
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -249,47 +247,25 @@ func (sg *SegmentGroup) stripTmpExtension(oldPath string) (string, error) {
 	return newPath, nil
 }
 
-func (sg *SegmentGroup) initCompactionCycle(interval time.Duration) {
-	if interval == 0 {
-		return
-	}
+func (sg *SegmentGroup) initCompactionCycle() {
+	
+		// sg.logger.WithField("action", "lsm_compaction_stop_cycle").
+		// 	WithField("path", sg.dir).
+		// 	Debug("stop compaction cycle")
+	sg.monitorSegments()
 
-	go func() {
-		t := time.NewTicker(interval)
-		defer t.Stop()
-
-		var ctx context.Context
-		for {
-			select {
-			case ctx = <-sg.compactionCycle.Stop:
-				if ctx.Err() == nil {
-					sg.logger.WithField("action", "lsm_compaction_stop_cycle").
-						WithField("path", sg.dir).
-						Debug("stop compaction cycle")
-					return
-				} else {
-					sg.logger.WithField("action", "lsm_compaction_stop_cycle").
-						WithField("path", sg.dir).
-						Debug("stop compaction cycle cancelled")
-				}
-			case <-t.C:
-				sg.monitorSegments()
-
-				if sg.eligibleForCompaction() {
-					if err := sg.compactOnce(); err != nil {
-						sg.logger.WithField("action", "lsm_compaction").
-							WithField("path", sg.dir).
-							WithError(err).
-							Errorf("compaction failed")
-					}
-				} else {
-					sg.logger.WithField("action", "lsm_compaction").
-						WithField("path", sg.dir).
-						Trace("no segment eligible for compaction")
-				}
-			}
+	if sg.eligibleForCompaction() {
+		if err := sg.compactOnce(); err != nil {
+			sg.logger.WithField("action", "lsm_compaction").
+				WithField("path", sg.dir).
+				WithError(err).
+				Errorf("compaction failed")
 		}
-	}()
+	} else {
+		sg.logger.WithField("action", "lsm_compaction").
+			WithField("path", sg.dir).
+			Trace("no segment eligible for compaction")
+	}
 }
 
 func (sg *SegmentGroup) Len() int {
