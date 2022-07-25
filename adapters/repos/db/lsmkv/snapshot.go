@@ -24,7 +24,7 @@ func (b *Bucket) PauseCompaction(ctx context.Context) error {
 		return errors.Wrap(ctx.Err(), "long-running compaction in progress")
 	case stopped := <-b.disk.compactionCycle.TryStop(ctx):
 		if !stopped {
-			errors.Wrap(ctx.Err(), "failed to pause compaction")
+			return errors.Wrap(ctx.Err(), "failed to pause compaction")
 		}
 		return nil
 	}
