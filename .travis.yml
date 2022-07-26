@@ -73,7 +73,7 @@ jobs:
   - name: "Unit and integration tests"
     stage: test
     script: 
-    - ./test/run.sh --unit_and_integration_tests || travis_terminate 1
+    - ./test/run.sh --unit-and-integration-only || travis_terminate 1
     - |
       if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
           # send to codecov.io
@@ -84,10 +84,10 @@ jobs:
           bash <(curl -s https://codecov.io/bash) -F integration
           rm -f coverage.txt
       fi
-  - name: "Acceptance tests (requiring docker to run)"
+  - name: "Acceptance and benchmark tests (requiring docker to run)"
     stage: test
     script: 
-    - ./test/run.sh --acceptance_tests || travis_terminate 1
+    - ./test/run.sh --acceptance-only --benchmark-only || travis_terminate 1
   - name: "Push docker container"
     if: type != pull_request
     stage: deploy
