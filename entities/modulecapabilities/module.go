@@ -18,10 +18,22 @@ import (
 	"github.com/semi-technologies/weaviate/entities/moduletools"
 )
 
+type ModuleType string
+
+const (
+	Text2Vec  ModuleType = "Text2Vec"
+	Img2Vec   ModuleType = "Img2Vec"
+	Multi2Vec ModuleType = "Multi2Vec"
+	Text2Text ModuleType = "Text2Text"
+	Extension ModuleType = "Extension"
+	Storage   ModuleType = "Storage"
+)
+
 type Module interface {
 	Name() string
 	Init(ctx context.Context, params moduletools.ModuleInitParams) error
 	RootHandler() http.Handler // TODO: remove from overall module, this is a capability
+	Type() ModuleType
 }
 
 type ModuleExtension interface {
