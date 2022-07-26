@@ -44,6 +44,8 @@ func (c *CycleManager2) Start() {
 	}
 
 	handleStopSignal := func(sig *stopSignal) bool {
+		defer close(sig.stopResult)
+
 		fmt.Printf("   ==> loop: signal start\n")
 		proceed := false
 		for _, ctx := range sig.contexts {
@@ -113,6 +115,7 @@ func (c *CycleManager2) TryStop(ctx context.Context) (stopResult chan bool) {
 	stopResult = make(chan bool, 1)
 	if !c.running {
 		stopResult <- true
+		close(stopResult)
 		return stopResult
 	}
 
@@ -125,7 +128,9 @@ func (c *CycleManager2) TryStop(ctx context.Context) (stopResult chan bool) {
 		go func() {
 			cs := <-commonStopped
 			prevSignal.stopResult <- cs
+			close(prevSignal.stopResult)
 			stopResult <- cs
+			close(stopResult)
 		}()
 	default:
 		fmt.Printf("   ==> TryStop: default\n")

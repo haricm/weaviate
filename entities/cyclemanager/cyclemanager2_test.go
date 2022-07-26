@@ -77,7 +77,7 @@ func TestCycleManager2_timeout(t *testing.T) {
 		cm.Start()
 
 		// wait for 1st cycle to start
-		time.Sleep(cycleInterval + 1*time.Millisecond)
+		time.Sleep(cycleInterval + 3*time.Millisecond)
 		stopResult := cm.TryStop(timeoutCtx)
 		fmt.Printf("   ==> test/after trystop [%+v]\n", stopResult)
 
@@ -123,7 +123,7 @@ func TestCycleManager2_doesNotStartMultipleTimes(t *testing.T) {
 		}
 
 		// wait for 1st cycle to start
-		time.Sleep(cycleInterval + 1*time.Millisecond)
+		time.Sleep(cycleInterval + 3*time.Millisecond)
 		stopResult := cm.TryStop(context.Background())
 
 		assert.True(t, <-stopResult)
@@ -149,7 +149,7 @@ func TestCycleManager2_handlesMultipleStops(t *testing.T) {
 		cm.Start()
 
 		// wait for 1st cycle to start
-		time.Sleep(cycleInterval + 1*time.Millisecond)
+		time.Sleep(cycleInterval + 3*time.Millisecond)
 		stopResult := make([]chan bool, stopCount)
 		for i := 0; i < stopCount; i++ {
 			stopResult[i] = cm.TryStop(context.Background())
@@ -184,7 +184,7 @@ func TestCycleManager2_stopsIfNotAllContextsAreCancelled(t *testing.T) {
 		cm.Start()
 
 		// wait for 1st cycle to start
-		time.Sleep(cycleInterval + 1*time.Millisecond)
+		time.Sleep(cycleInterval + 3*time.Millisecond)
 
 		stopResult1 := cm.TryStop(timeout1Ctx)
 		stopResult2 := cm.TryStop(timeout2Ctx)
@@ -222,7 +222,7 @@ func TestCycleManager2_doesNotStopIfAllContextsAreCancelled(t *testing.T) {
 		cm.Start()
 
 		// wait for 1st cycle to start
-		time.Sleep(cycleInterval + 1*time.Millisecond)
+		time.Sleep(cycleInterval + 3*time.Millisecond)
 
 		stopResult1 := cm.TryStop(timeout1Ctx)
 		stopResult2 := cm.TryStop(timeout2Ctx)
