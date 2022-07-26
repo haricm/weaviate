@@ -12,23 +12,23 @@ type CycleFunc func()
 type CycleManager2 struct {
 	sync.RWMutex
 
-	cycleFunc CycleFunc
+	cycleFunc     CycleFunc
 	cycleInterval time.Duration
-	running bool
-	stop chan *stopSignal
+	running       bool
+	stop          chan *stopSignal
 }
 
 type stopSignal struct {
-	contexts []context.Context
+	contexts   []context.Context
 	stopResult chan bool
 }
 
 func New2(cycleInterval time.Duration, cycleFunc CycleFunc) *CycleManager2 {
 	return &CycleManager2{
-		cycleFunc: cycleFunc,
+		cycleFunc:     cycleFunc,
 		cycleInterval: cycleInterval,
-		running: false,
-		stop: make(chan *stopSignal, 1),
+		running:       false,
+		stop:          make(chan *stopSignal, 1),
 	}
 }
 
@@ -50,7 +50,7 @@ func (c *CycleManager2) Start() {
 			if ctx.Err() == nil {
 				proceed = true
 				break
-			}				
+			}
 		}
 		if proceed {
 			c.Lock()
@@ -69,7 +69,7 @@ func (c *CycleManager2) Start() {
 
 	go func() {
 		fmt.Printf("   ==> loop: created\n")
-	
+
 		ticker := time.NewTicker(c.cycleInterval)
 		defer ticker.Stop()
 
@@ -99,12 +99,12 @@ func (c *CycleManager2) Start() {
 			fmt.Printf("   ==> loop: finish\n")
 		}
 	}()
-	
+
 	c.running = true
 	fmt.Printf("   ==> Start: finish\n")
 }
 
-func (c * CycleManager2) TryStop(ctx context.Context) (stopResult chan bool) {
+func (c *CycleManager2) TryStop(ctx context.Context) (stopResult chan bool) {
 	fmt.Printf("   ==> TryStop: beginning\n")
 	c.Lock()
 	fmt.Printf("   ==> TryStop: lock acquired\n")
@@ -117,13 +117,13 @@ func (c * CycleManager2) TryStop(ctx context.Context) (stopResult chan bool) {
 	}
 
 	select {
-	//there is already pending stop, add new context to previous ones
-	case prevSignal := <- c.stop:
+	// there is already pending stop, add new context to previous ones
+	case prevSignal := <-c.stop:
 		fmt.Printf("   ==> TryStop: prev signal\n")
 		commonStopped := make(chan bool, 1)
 		c.stop <- &stopSignal{append(prevSignal.contexts, ctx), commonStopped}
 		go func() {
-			cs := <- commonStopped
+			cs := <-commonStopped
 			prevSignal.stopResult <- cs
 			stopResult <- cs
 		}()

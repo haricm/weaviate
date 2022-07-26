@@ -248,10 +248,9 @@ func (sg *SegmentGroup) stripTmpExtension(oldPath string) (string, error) {
 }
 
 func (sg *SegmentGroup) initCompactionCycle() {
-	
-		// sg.logger.WithField("action", "lsm_compaction_stop_cycle").
-		// 	WithField("path", sg.dir).
-		// 	Debug("stop compaction cycle")
+	// sg.logger.WithField("action", "lsm_compaction_stop_cycle").
+	// 	WithField("path", sg.dir).
+	// 	Debug("stop compaction cycle")
 	sg.monitorSegments()
 
 	if sg.eligibleForCompaction() {

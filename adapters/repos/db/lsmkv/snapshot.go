@@ -60,7 +60,7 @@ func (b *Bucket) FlushMemtable(ctx context.Context) error {
 		default:
 			if !stopped {
 				return fmt.Errorf("failed to flash memtable")
-			}			
+			}
 		}
 		defer b.flushCycle.Start()
 		// this lock does not currently _need_ to be
