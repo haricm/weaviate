@@ -2,6 +2,7 @@ package lsmkv
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 
@@ -23,8 +24,13 @@ func (b *Bucket) PauseCompaction(ctx context.Context) error {
 	case <-ctx.Done():
 		return errors.Wrap(ctx.Err(), "long-running compaction in progress")
 	case stopped := <-b.disk.compactionCycle.TryStop(ctx):
-		if !stopped {
-			return errors.Wrap(ctx.Err(), "failed to pause compaction")
+		select {
+		case <-ctx.Done():
+			return errors.Wrap(ctx.Err(), "long-running compaction in progress")
+		default:
+			if !stopped {
+				return fmt.Errorf("failed to pause compaction")
+			}
 		}
 		return nil
 	}
@@ -48,8 +54,13 @@ func (b *Bucket) FlushMemtable(ctx context.Context) error {
 	case <-ctx.Done():
 		return errors.Wrap(ctx.Err(), "long-running memtable flush in progress")
 	case stopped := <-b.flushCycle.TryStop(ctx):
-		if !stopped {
-			return errors.Wrap(ctx.Err(), "failed to flash memtable")
+		select {
+		case <-ctx.Done():
+			return errors.Wrap(ctx.Err(), "long-running memtable flush in progress")
+		default:
+			if !stopped {
+				return fmt.Errorf("failed to flash memtable")
+			}			
 		}
 		defer b.flushCycle.Start()
 		// this lock does not currently _need_ to be
